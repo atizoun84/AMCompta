@@ -360,6 +360,10 @@
                         <option value="month">Ce Mois</option>
                         <option value="year">Cette Année</option>
                     </select>
+                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold" id="btnSort" onclick="toggleSort()">
+                        <i class="bi bi-sort-down me-1" id="sortIcon"></i> <span id="sortText">Récents</span>
+                    </button>
+                    
                     <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="toggleTable()">
                         <i class="bi bi-eye me-1"></i> <span id="btnTableText">Afficher</span>
                     </button>
@@ -536,6 +540,7 @@
         const VALID_CODE = "11984";
         let myChart, myPie;
         let deferredPrompt;
+        window.sortOrder = 'recent'; // 'recent' ou 'old'
 
         // Écoute des données Firebase
         onValue(transactionsRef, (snapshot) => {
@@ -594,7 +599,7 @@
             });
         }
 
-        // --- NOUVEAUTÉ : SUGGESTIONS DYNAMIQUES ---
+        // --- SUGGESTIONS DYNAMIQUES ---
         function updateSuggestions() {
             const descs = new Set();
             const benefs = new Set();
@@ -612,6 +617,22 @@
             benefs.forEach(b => dlBenef.innerHTML += `<option value="${b}">`);
         }
 
+        // Fonction de Tri
+        window.toggleSort = function() {
+            const icon = document.getElementById('sortIcon');
+            const text = document.getElementById('sortText');
+            if(window.sortOrder === 'recent') {
+                window.sortOrder = 'old';
+                icon.className = "bi bi-sort-up me-1";
+                text.innerText = "Anciens";
+            } else {
+                window.sortOrder = 'recent';
+                icon.className = "bi bi-sort-down me-1";
+                text.innerText = "Récents";
+            }
+            renderAll();
+        };
+
         window.renderAll = function() {
             const filtered = getFilteredTransactions();
             const tbody = document.getElementById('transaction-table-body');
@@ -624,11 +645,11 @@
             let chartData = [];
             let currentBalance = 0;
             
-            // --- NOUVEAUTÉ : DÉTECTION PHARES ---
+            // DÉTECTION PHARES
             let maxRevObj = { amount: 0, desc: "---" };
             let maxDepObj = { amount: 0, desc: "---" };
 
-            // On trie par date pour le graphique et les calculs cumulés
+            // On trie toujours par date pour le graphique et les calculs cumulés (ligne chronologique)
             const sortedTimeline = [...window.transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
 
             sortedTimeline.forEach(t => {
@@ -653,8 +674,13 @@
                 }
             });
 
-            // Affichage Tableau
-            const displayList = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
+            // Affichage Tableau avec prise en compte du tri sélectionné
+            const displayList = [...filtered].sort((a,b) => {
+                return window.sortOrder === 'recent' 
+                    ? new Date(b.date) - new Date(a.date) 
+                    : new Date(a.date) - new Date(b.date);
+            });
+
             displayList.forEach(t => {
                 tbody.innerHTML += `
                     <tr class="fw-bold">
@@ -681,7 +707,7 @@
             });
 
             // Updates Dashboard
-            const netBalance = currentBalance; // Solde réel global
+            const netBalance = currentBalance; 
             document.getElementById('dash-total').innerText = netBalance.toLocaleString() + ' FCFA';
             document.getElementById('dash-total').style.color = netBalance >= 0 ? '#2dce89' : '#f5365c';
             document.getElementById('dash-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
@@ -709,9 +735,10 @@
                 myPie.update();
             }
 
-            // Recent List
+            // Recent List (Dashboard reste toujours sur les derniers ajouts)
             recentDiv.innerHTML = displayList.length ? '' : '<p class="text-muted small text-center py-4 w-100">Aucune activité</p>';
-            displayList.slice(0, 4).forEach(t => {
+            const mostRecentForDash = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
+            mostRecentForDash.slice(0, 4).forEach(t => {
                 recentDiv.innerHTML += `
                     <div class="col-md-6 col-lg-3">
                         <div class="transaction-item d-flex align-items-center p-2 border rounded mb-2 shadow-sm" style="background: white;">
@@ -731,7 +758,7 @@
             });
         };
 
-        // --- NOUVEAUTÉ : OPTIMISATION PWA ---
+        // OPTIMISATION PWA
         function setupPWA() {
             const btnInstall = document.getElementById('installApp');
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -862,7 +889,6 @@
             
             document.getElementById('print-family-name-header').innerText = familyName;
             document.getElementById('print-family-name-footer').innerText = `Chef de famille : ${familyName}`;
-            // Mise à jour du nom sous la signature
             document.getElementById('print-chef-name').innerText = familyName;
 
             tbody.innerHTML = '';
