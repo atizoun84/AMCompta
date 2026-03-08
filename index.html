@@ -176,6 +176,8 @@
             th { background-color: #f8f9fa !important; }
             .print-header { border-bottom: 3px double #333; padding-bottom: 10px; margin-bottom: 20px; }
             .print-footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9pt; border-top: 1px solid #ccc; padding-top: 5px; }
+            .print-signature-box { margin-top: 40px; text-align: right; padding-right: 50px; }
+            .signature-line { border-bottom: 1px solid black; width: 200px; display: inline-block; margin-top: 40px; }
         }
 
         /* Notification Toast */
@@ -220,6 +222,14 @@
             </thead>
             <tbody id="print-tbody"></tbody>
         </table>
+
+        <div class="print-signature-box">
+            <p class="mb-0 fw-bold">Le Chef de Famille,</p>
+            <p class="mb-0" id="print-chef-name">AMOUSSOU Atizoun Plateny</p>
+            <div class="signature-line"></div>
+            <p class="small text-muted mt-1">Signature manuscrite</p>
+        </div>
+
         <div class="print-footer">
             Généré le <span id="print-gen-date"></span> | <span id="print-family-name-footer"></span>
         </div>
@@ -489,7 +499,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, update, enableLogging } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDeDimpSkIPtx9mTfg00Ra67MIpBCyh6GY",
@@ -505,6 +515,7 @@
         const db = getDatabase(app);
         const transactionsRef = ref(db, 'transactions');
 
+        // Gestion de l'état hors ligne (Badge Sync)
         const connectedRef = ref(db, ".info/connected");
         onValue(connectedRef, (snap) => {
             const badge = document.getElementById('syncStatus');
@@ -520,10 +531,13 @@
             }
         });
 
+        // --- GLOBAL LOGIC ---
         window.transactions = [];
         const VALID_CODE = "11984";
         let myChart, myPie;
+        let deferredPrompt;
 
+        // Écoute des données Firebase
         onValue(transactionsRef, (snapshot) => {
             const data = snapshot.val();
             window.transactions = [];
@@ -536,6 +550,7 @@
             renderAll();
         });
 
+        // Fonctions CRUD
         window.addOrUpdateFirebase = function(trans) {
             if (trans.firebaseId) {
                 const itemRef = ref(db, `transactions/${trans.firebaseId}`);
@@ -551,11 +566,13 @@
             remove(itemRef);
         };
 
+        // --- INITIALISATION ---
         window.addEventListener('load', () => {
             initCharts();
             document.getElementById('inputDate').valueAsDate = new Date();
             document.getElementById('configFamilyName').value = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
             applyInputTheme();
+            setupPWA();
         });
 
         function initCharts() {
@@ -577,57 +594,67 @@
             });
         }
 
-        // --- NOUVELLE FONCTION : SUGGESTIONS ---
+        // --- NOUVEAUTÉ : SUGGESTIONS DYNAMIQUES ---
         function updateSuggestions() {
-            const descs = [...new Set(window.transactions.map(t => t.desc))];
-            const benefs = [...new Set(window.transactions.map(t => t.benef).filter(b => b))];
+            const descs = new Set();
+            const benefs = new Set();
+            window.transactions.forEach(t => {
+                if(t.desc) descs.add(t.desc);
+                if(t.benef) benefs.add(t.benef);
+            });
             
-            const descList = document.getElementById('descSuggestions');
-            const benefList = document.getElementById('benefSuggestions');
-            
-            descList.innerHTML = descs.map(d => `<option value="${d}">`).join('');
-            benefList.innerHTML = benefs.map(b => `<option value="${b}">`).join('');
+            const dlDesc = document.getElementById('descSuggestions');
+            dlDesc.innerHTML = '';
+            descs.forEach(d => dlDesc.innerHTML += `<option value="${d}">`);
+
+            const dlBenef = document.getElementById('benefSuggestions');
+            dlBenef.innerHTML = '';
+            benefs.forEach(b => dlBenef.innerHTML += `<option value="${b}">`);
         }
 
         window.renderAll = function() {
             const filtered = getFilteredTransactions();
-            const allTransactions = [...window.transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
-            
             const tbody = document.getElementById('transaction-table-body');
             const recentDiv = document.getElementById('recent-activities-list');
             
             tbody.innerHTML = '';
             let totalRev = 0, totalDep = 0;
             let analysisData = {};
+            let chartLabels = [];
+            let chartData = [];
+            let currentBalance = 0;
             
-            // --- LOGIQUE PHARE (Basée sur le filtre actuel) ---
-            let maxRev = { amount: 0, desc: '---' };
-            let maxDep = { amount: 0, desc: '---' };
+            // --- NOUVEAUTÉ : DÉTECTION PHARES ---
+            let maxRevObj = { amount: 0, desc: "---" };
+            let maxDepObj = { amount: 0, desc: "---" };
 
+            // On trie par date pour le graphique et les calculs cumulés
+            const sortedTimeline = [...window.transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            sortedTimeline.forEach(t => {
+                if(t.type === 'Revenu') {
+                    currentBalance += t.amount;
+                    if(t.amount > maxRevObj.amount) maxRevObj = t;
+                } else {
+                    currentBalance -= t.amount;
+                    if(t.amount > maxDepObj.amount) maxDepObj = t;
+                }
+                chartLabels.push(new Date(t.date).toLocaleDateString());
+                chartData.push(currentBalance);
+            });
+
+            // Calcul des totaux pour la période filtrée
             filtered.forEach(t => {
                 if(t.type === 'Revenu') {
                     totalRev += t.amount;
-                    if(t.amount > maxRev.amount) maxRev = { amount: t.amount, desc: t.desc };
                 } else {
                     totalDep += t.amount;
-                    if(t.amount > maxDep.amount) maxDep = { amount: t.amount, desc: t.desc };
                     analysisData[t.desc] = (analysisData[t.desc] || 0) + t.amount;
                 }
             });
 
-            // --- LOGIQUE GRAPHIQUE DYNAMIQUE (Toutes les transactions) ---
-            let chartLabels = [];
-            let chartData = [];
-            let cumulativeBalance = 0;
-            allTransactions.forEach(t => {
-                if(t.type === 'Revenu') cumulativeBalance += t.amount;
-                else cumulativeBalance -= t.amount;
-                chartLabels.push(new Date(t.date).toLocaleDateString());
-                chartData.push(cumulativeBalance);
-            });
-
+            // Affichage Tableau
             const displayList = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
-
             displayList.forEach(t => {
                 tbody.innerHTML += `
                     <tr class="fw-bold">
@@ -653,22 +680,24 @@
                 `;
             });
 
-            const netBalance = totalRev - totalDep;
+            // Updates Dashboard
+            const netBalance = currentBalance; // Solde réel global
             document.getElementById('dash-total').innerText = netBalance.toLocaleString() + ' FCFA';
             document.getElementById('dash-total').style.color = netBalance >= 0 ? '#2dce89' : '#f5365c';
             document.getElementById('dash-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
             document.getElementById('dash-depense').innerText = totalDep.toLocaleString() + ' FCFA';
             
-            // Mise à jour Affichage Phare
-            document.getElementById('dash-phare-revenu').innerText = maxRev.amount > 0 ? maxRev.amount.toLocaleString() + ' FCFA' : '---';
-            document.getElementById('dash-phare-revenu-desc').innerText = maxRev.desc;
-            document.getElementById('dash-phare-depense').innerText = maxDep.amount > 0 ? maxDep.amount.toLocaleString() + ' FCFA' : '---';
-            document.getElementById('dash-phare-depense-desc').innerText = maxDep.desc;
+            // Updates Phares
+            document.getElementById('dash-phare-revenu').innerText = maxRevObj.amount.toLocaleString() + ' FCFA';
+            document.getElementById('dash-phare-revenu-desc').innerText = maxRevObj.desc;
+            document.getElementById('dash-phare-depense').innerText = maxDepObj.amount.toLocaleString() + ' FCFA';
+            document.getElementById('dash-phare-depense-desc').innerText = maxDepObj.desc;
 
             document.getElementById('report-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
             document.getElementById('report-depense').innerText = totalDep.toLocaleString() + ' FCFA';
-            document.getElementById('report-marge').innerText = netBalance.toLocaleString() + ' FCFA';
+            document.getElementById('report-marge').innerText = (totalRev - totalDep).toLocaleString() + ' FCFA';
 
+            // Charts Updates
             if(myChart) {
                 myChart.data.labels = chartLabels;
                 myChart.data.datasets[0].data = chartData;
@@ -680,6 +709,7 @@
                 myPie.update();
             }
 
+            // Recent List
             recentDiv.innerHTML = displayList.length ? '' : '<p class="text-muted small text-center py-4 w-100">Aucune activité</p>';
             displayList.slice(0, 4).forEach(t => {
                 recentDiv.innerHTML += `
@@ -701,6 +731,30 @@
             });
         };
 
+        // --- NOUVEAUTÉ : OPTIMISATION PWA ---
+        function setupPWA() {
+            const btnInstall = document.getElementById('installApp');
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                btnInstall.style.display = 'block';
+            });
+
+            btnInstall.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') btnInstall.style.display = 'none';
+                    deferredPrompt = null;
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                btnInstall.style.display = 'none';
+            });
+        }
+
+        // Form Submission
         document.getElementById('transactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -715,6 +769,7 @@
             
             if(editId) newTrans.firebaseId = editId;
             window.addOrUpdateFirebase(newTrans);
+            
             bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
             this.reset();
             document.getElementById('editId').value = "";
@@ -724,6 +779,7 @@
             applyInputTheme();
         });
 
+        // Config Impression
         document.getElementById('printConfigForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const familyName = document.getElementById('configFamilyName').value;
@@ -806,6 +862,8 @@
             
             document.getElementById('print-family-name-header').innerText = familyName;
             document.getElementById('print-family-name-footer').innerText = `Chef de famille : ${familyName}`;
+            // Mise à jour du nom sous la signature
+            document.getElementById('print-chef-name').innerText = familyName;
 
             tbody.innerHTML = '';
             let rev = 0, dep = 0;
