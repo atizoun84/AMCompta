@@ -274,7 +274,7 @@
                     <h2 class="fw-700 mb-0">Tableau de Bord</h2>
                     <p class="text-muted">Bienvenue dans votre gestion financière</p>
                 </div>
-                <button class="btn btn-gradient shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                <button class="btn btn-gradient shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal" onclick="prepareAddModal()">
                     <i class="bi bi-plus-lg me-2"></i>Nouvelle Saisie
                 </button>
             </div>
@@ -369,7 +369,7 @@
                         <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="toggleTable()">
                             <i class="bi bi-eye me-1"></i> <span id="btnTableText">Afficher</span>
                         </button>
-                        <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus"></i></button>
+                        <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addModal" onclick="prepareAddModal()"><i class="bi bi-plus"></i></button>
                     </div>
                 </div>
                 <div class="search-container-full">
@@ -750,8 +750,8 @@
             let chartData = [];
             let currentBalance = 0;
             
-            let maxRevObj = { amount: 0, desc: "---" };
-            let maxDepObj = { amount: 0, desc: "---" };
+            let maxRevObj = { amount: 0, desc: "---", benef: "" };
+            let maxDepObj = { amount: 0, desc: "---", benef: "" };
 
             // Timeline pour graphique
             const sortedTimeline = [...window.transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -817,6 +817,12 @@
             document.getElementById('report-depense').innerText = totalDep.toLocaleString() + ' FCFA';
             document.getElementById('report-marge').innerText = (totalRev - totalDep).toLocaleString() + ' FCFA';
 
+            // Mise à jour des Phares
+            document.getElementById('dash-phare-revenu').innerText = maxRevObj.amount > 0 ? maxRevObj.amount.toLocaleString() + ' FCFA' : '---';
+            document.getElementById('dash-phare-revenu-desc').innerText = maxRevObj.amount > 0 ? `${maxRevObj.desc} (${maxRevObj.benef || 'N/A'})` : 'Aucune donnée';
+            document.getElementById('dash-phare-depense').innerText = maxDepObj.amount > 0 ? maxDepObj.amount.toLocaleString() + ' FCFA' : '---';
+            document.getElementById('dash-phare-depense-desc').innerText = maxDepObj.amount > 0 ? `${maxDepObj.desc} (${maxDepObj.benef || 'N/A'})` : 'Aucune donnée';
+
             if(myChart) {
                 myChart.data.labels = chartLabels;
                 myChart.data.datasets[0].data = chartData;
@@ -852,9 +858,7 @@
         // --- INITIALISATION ---
         window.addEventListener('load', () => {
             initCharts();
-            document.getElementById('inputDate').valueAsDate = new Date();
             document.getElementById('configFamilyName').value = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
-            applyInputTheme();
             setupPWA();
         });
 
@@ -889,7 +893,7 @@
             benefs.forEach(b => dlBenef.innerHTML += `<option value="${b}">`);
         }
 
-        // PWA et UI Helpers (Inchangés)
+        // PWA et UI Helpers
         function setupPWA() {
             const btnInstall = document.getElementById('installApp');
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -904,6 +908,16 @@
                 }
             });
         }
+
+        // Préparer le modal d'ajout avec la date courante
+        window.prepareAddModal = function() {
+            document.getElementById('transactionForm').reset();
+            document.getElementById('editId').value = "";
+            document.getElementById('modalTitle').innerText = "Nouvelle Transaction";
+            document.getElementById('btnSubmit').innerText = "Enregistrer";
+            document.getElementById('inputDate').valueAsDate = new Date();
+            applyInputTheme();
+        };
 
         document.getElementById('transactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -921,7 +935,6 @@
             bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
             this.reset();
             document.getElementById('editId').value = "";
-            document.getElementById('inputDate').valueAsDate = new Date();
             applyInputTheme();
         });
 
