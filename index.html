@@ -219,7 +219,7 @@
         <table id="print-table">
             <thead>
                 <tr>
-                    <th>Date</th>
+                    <th>Date & Heure</th>
                     <th>Description</th>
                     <th>Bénéficiaire</th>
                     <th>Type</th>
@@ -536,7 +536,7 @@
                         <table class="table table-sm table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Date</th>
+                                    <th>Date & Heure</th>
                                     <th>Bénéficiaire</th>
                                     <th class="text-end">Montant</th>
                                 </tr>
@@ -680,7 +680,7 @@
                 total += t.amount;
                 tbody.innerHTML += `
                     <tr>
-                        <td>${new Date(t.date).toLocaleDateString()}</td>
+                        <td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td>
                         <td>${t.benef || '-'}</td>
                         <td class="text-end fw-bold">${t.amount.toLocaleString()}</td>
                     </tr>
@@ -720,7 +720,7 @@
                 total += t.amount;
                 tbody.innerHTML += `
                     <tr>
-                        <td>${new Date(t.date).toLocaleDateString()}</td>
+                        <td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td>
                         <td>${t.desc}</td>
                         <td>${t.benef || '-'}</td>
                         <td style="color: ${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
@@ -788,7 +788,7 @@
                     <tr class="fw-bold">
                         <td class="ps-4">
                             <div class="small fw-bold">${new Date(t.date).toLocaleDateString()}</div>
-                            <div class="timestamp-detail"><i class="bi bi-clock me-1"></i>${t.created_at || 'N/A'}</div>
+                            <div class="timestamp-detail"><i class="bi bi-clock me-1"></i>${t.created_at.split(' à ')[1] || '---'}</div>
                         </td>
                         <td>
                             <div class="fw-bold text-dark">${t.desc}</div>
@@ -844,7 +844,7 @@
                             </div>
                             <div class="flex-grow-1 overflow-hidden fw-bold">
                                 <div class="fw-bold small text-truncate">${t.desc}</div>
-                                <div class="text-muted fw-normal" style="font-size: 0.65rem;">${new Date(t.date).toLocaleDateString()}</div>
+                                <div class="text-muted fw-normal" style="font-size: 0.65rem;">${new Date(t.date).toLocaleDateString()} ${t.created_at.split(' à ')[1] || ''}</div>
                             </div>
                             <div class="fw-bold small ${t.type==='Revenu'?'text-success':'text-danger'}">
                                 ${t.type==='Revenu'?'+':'-'}${t.amount.toLocaleString()}
@@ -1022,7 +1022,7 @@
             let rev = 0, dep = 0;
             filtered.forEach(t => {
                 if(t.type === 'Revenu') rev += t.amount; else dep += t.amount;
-                tbody.innerHTML += `<tr><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.desc}</td><td>${t.benef || '-'}</td><td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td><td>${t.amount.toLocaleString()}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td><td>${t.desc}</td><td>${t.benef || '-'}</td><td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td><td>${t.amount.toLocaleString()}</td></tr>`;
             });
 
             document.getElementById('print-period-info').innerText = `Période : ${period}`;
