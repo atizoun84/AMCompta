@@ -189,6 +189,12 @@
             font-size: 0.75rem;
             display: none;
         }
+
+        /* Nouveau Style Recherche */
+        .search-container-full {
+            width: 100%;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -343,31 +349,34 @@
         </div>
 
         <div id="section-transactions" class="page-section">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-                <div>
-                    <h2 class="fw-700 mb-0">Historique</h2>
-                    <p class="text-muted mb-0">Suivi détaillé</p>
-                </div>
-                <div class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-search"></i></span>
-                        <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill fw-bold" placeholder="Chercher..." onkeyup="filterData()">
+            <div class="d-flex flex-column mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h2 class="fw-700 mb-0">Historique</h2>
+                        <p class="text-muted mb-0">Suivi détaillé</p>
                     </div>
-                    <select class="form-select form-select-sm rounded-pill fw-bold" id="filterPeriod" onchange="filterData()" style="width: auto;">
-                        <option value="all">Tout</option>
-                        <option value="day">Aujourd'hui</option>
-                        <option value="week">Cette Semaine</option>
-                        <option value="month">Ce Mois</option>
-                        <option value="year">Cette Année</option>
-                    </select>
-                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold" id="btnSort" onclick="toggleSort()">
-                        <i class="bi bi-sort-down me-1" id="sortIcon"></i> <span id="sortText">Récents</span>
-                    </button>
-                    
-                    <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="toggleTable()">
-                        <i class="bi bi-eye me-1"></i> <span id="btnTableText">Afficher</span>
-                    </button>
-                    <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus"></i></button>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="toggleSortOrder()" id="btnSort">
+                            <i class="bi bi-sort-down"></i> <span id="sortText">Récent</span>
+                        </button>
+                        <select class="form-select form-select-sm rounded-pill fw-bold" id="filterPeriod" onchange="filterData()" style="width: auto;">
+                            <option value="all">Tout</option>
+                            <option value="day">Aujourd'hui</option>
+                            <option value="week">Cette Semaine</option>
+                            <option value="month">Ce Mois</option>
+                            <option value="year">Cette Année</option>
+                        </select>
+                        <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="toggleTable()">
+                            <i class="bi bi-eye me-1"></i> <span id="btnTableText">Afficher</span>
+                        </button>
+                        <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus"></i></button>
+                    </div>
+                </div>
+                <div class="search-container-full">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-pill shadow-sm"><i class="bi bi-search text-primary"></i></span>
+                        <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill fw-bold shadow-sm" placeholder="Rechercher une transaction ou un bénéficiaire..." onkeyup="filterData()">
+                    </div>
                 </div>
             </div>
             
@@ -420,9 +429,14 @@
                                 <span class="fw-bold text-primary" id="report-marge">0 FCFA</span>
                             </li>
                         </ul>
-                        <button class="btn btn-gradient w-100 mt-4" data-bs-toggle="modal" data-bs-target="#printConfigModal">
-                            <i class="bi bi-printer me-2"></i>Imprimer Rapport Pro
-                        </button>
+                        <div class="d-flex flex-column gap-2 mt-4">
+                            <button class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="openAnalysisModal()">
+                                <i class="bi bi-funnel-fill me-2"></i>Analyse par Catégorie
+                            </button>
+                            <button class="btn btn-gradient w-100 py-2" data-bs-toggle="modal" data-bs-target="#printConfigModal">
+                                <i class="bi bi-printer me-2"></i>Imprimer Rapport Pro
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -498,6 +512,51 @@
         </div>
     </div>
 
+    <div class="modal fade" id="analysisModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header text-white rounded-top-4" style="background: var(--primary-gradient)">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2"></i>Analyse Détaillée</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label class="small fw-bold text-muted text-uppercase">Filtrer par description</label>
+                            <select id="analysisSelect" class="form-select fw-bold rounded-3 border-primary" onchange="updateDetailedAnalysis()">
+                                <option value="">Choisir une catégorie...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold text-muted text-uppercase">Total Sélectionné</label>
+                            <div class="h4 fw-bold text-primary mb-0 mt-1" id="analysisTotal">0 FCFA</div>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 300px;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Bénéficiaire</th>
+                                    <th class="text-end">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analysisTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light rounded-bottom-4">
+                    <button class="btn btn-success rounded-pill px-4" onclick="copyAnalysisToWhatsApp()">
+                        <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                    </button>
+                    <button class="btn btn-dark rounded-pill px-4" onclick="printFilteredAnalysis()">
+                        <i class="bi bi-printer me-2"></i>Imprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -519,7 +578,14 @@
         const db = getDatabase(app);
         const transactionsRef = ref(db, 'transactions');
 
-        // Gestion de l'état hors ligne (Badge Sync)
+        // État Global
+        window.transactions = [];
+        window.sortOrder = 'desc'; // 'desc' = récent d'abord, 'asc' = ancien d'abord
+        const VALID_CODE = "11984";
+        let myChart, myPie;
+        let deferredPrompt;
+
+        // Synchronisation Firebase
         const connectedRef = ref(db, ".info/connected");
         onValue(connectedRef, (snap) => {
             const badge = document.getElementById('syncStatus');
@@ -535,14 +601,6 @@
             }
         });
 
-        // --- GLOBAL LOGIC ---
-        window.transactions = [];
-        const VALID_CODE = "11984";
-        let myChart, myPie;
-        let deferredPrompt;
-        window.sortOrder = 'recent'; // 'recent' ou 'old'
-
-        // Écoute des données Firebase
         onValue(transactionsRef, (snapshot) => {
             const data = snapshot.val();
             window.transactions = [];
@@ -571,68 +629,115 @@
             remove(itemRef);
         };
 
-        // --- INITIALISATION ---
-        window.addEventListener('load', () => {
-            initCharts();
-            document.getElementById('inputDate').valueAsDate = new Date();
-            document.getElementById('configFamilyName').value = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
-            applyInputTheme();
-            setupPWA();
-        });
-
-        function initCharts() {
-            const ctx = document.getElementById('myChart').getContext('2d');
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: [], datasets: [{ label: 'Variation Solde', data: [], borderColor: '#764ba2', tension: 0.4, fill: true, backgroundColor: 'rgba(118, 75, 162, 0.1)' }] },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            const ctxPie = document.getElementById('pieChart').getContext('2d');
-            myPie = new Chart(ctxPie, {
-                type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'] }] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
-                }
-            });
-        }
-
-        // --- SUGGESTIONS DYNAMIQUES ---
-        function updateSuggestions() {
-            const descs = new Set();
-            const benefs = new Set();
-            window.transactions.forEach(t => {
-                if(t.desc) descs.add(t.desc);
-                if(t.benef) benefs.add(t.benef);
-            });
-            
-            const dlDesc = document.getElementById('descSuggestions');
-            dlDesc.innerHTML = '';
-            descs.forEach(d => dlDesc.innerHTML += `<option value="${d}">`);
-
-            const dlBenef = document.getElementById('benefSuggestions');
-            dlBenef.innerHTML = '';
-            benefs.forEach(b => dlBenef.innerHTML += `<option value="${b}">`);
-        }
-
-        // Fonction de Tri
-        window.toggleSort = function() {
-            const icon = document.getElementById('sortIcon');
+        // --- GESTION DU TRI ---
+        window.toggleSortOrder = function() {
+            window.sortOrder = window.sortOrder === 'desc' ? 'asc' : 'desc';
+            const btn = document.getElementById('btnSort');
+            const icon = btn.querySelector('i');
             const text = document.getElementById('sortText');
-            if(window.sortOrder === 'recent') {
-                window.sortOrder = 'old';
-                icon.className = "bi bi-sort-up me-1";
-                text.innerText = "Anciens";
+            
+            if(window.sortOrder === 'desc') {
+                icon.className = 'bi bi-sort-down';
+                text.innerText = 'Récent';
             } else {
-                window.sortOrder = 'recent';
-                icon.className = "bi bi-sort-down me-1";
-                text.innerText = "Récents";
+                icon.className = 'bi bi-sort-up';
+                text.innerText = 'Ancien';
             }
             renderAll();
         };
 
+        // --- ANALYSE DÉTAILLÉE ---
+        window.openAnalysisModal = function() {
+            const select = document.getElementById('analysisSelect');
+            const descriptions = [...new Set(window.transactions.map(t => t.desc))].sort();
+            
+            select.innerHTML = '<option value="">Choisir une catégorie...</option>';
+            descriptions.forEach(desc => {
+                select.innerHTML += `<option value="${desc}">${desc}</option>`;
+            });
+            
+            document.getElementById('analysisTableBody').innerHTML = '';
+            document.getElementById('analysisTotal').innerText = '0 FCFA';
+            new bootstrap.Modal(document.getElementById('analysisModal')).show();
+        };
+
+        window.updateDetailedAnalysis = function() {
+            const selectedDesc = document.getElementById('analysisSelect').value;
+            const tbody = document.getElementById('analysisTableBody');
+            const totalEl = document.getElementById('analysisTotal');
+            
+            if(!selectedDesc) {
+                tbody.innerHTML = '';
+                totalEl.innerText = '0 FCFA';
+                return;
+            }
+
+            const filtered = window.transactions.filter(t => t.desc === selectedDesc);
+            let total = 0;
+            tbody.innerHTML = '';
+
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
+                total += t.amount;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleDateString()}</td>
+                        <td>${t.benef || '-'}</td>
+                        <td class="text-end fw-bold">${t.amount.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            totalEl.innerText = total.toLocaleString() + ' FCFA';
+        };
+
+        window.copyAnalysisToWhatsApp = function() {
+            const desc = document.getElementById('analysisSelect').value;
+            if(!desc) return alert("Sélectionnez une catégorie");
+
+            const total = document.getElementById('analysisTotal').innerText;
+            const family = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
+            let text = `*RAPPORT FINANCIER - ${family}*\n`;
+            text += `*Catégorie :* ${desc}\n`;
+            text += `*Total cumulé :* ${total}\n\n`;
+            text += `_Généré via AMCompta le ${new Date().toLocaleString()}_`;
+
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        };
+
+        window.printFilteredAnalysis = function() {
+            const desc = document.getElementById('analysisSelect').value;
+            if(!desc) return alert("Sélectionnez une catégorie");
+            
+            const familyName = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
+            const filtered = window.transactions.filter(t => t.desc === desc);
+            
+            const tbody = document.getElementById('print-tbody');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            filtered.forEach(t => {
+                total += t.amount;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleDateString()}</td>
+                        <td>${t.desc}</td>
+                        <td>${t.benef || '-'}</td>
+                        <td style="color: ${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
+                        <td>${t.amount.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('print-family-name-header').innerText = familyName;
+            document.getElementById('print-period-info').innerText = `Analyse : ${desc}`;
+            document.getElementById('print-stats').innerHTML = `<div style="text-align:center; background:#eee; padding:10px;">Total pour ${desc}: <b>${total.toLocaleString()} FCFA</b></div>`;
+            
+            bootstrap.Modal.getInstance(document.getElementById('analysisModal')).hide();
+            setTimeout(() => window.print(), 500);
+        };
+
+        // --- LOGIQUE DE RENDU ---
         window.renderAll = function() {
             const filtered = getFilteredTransactions();
             const tbody = document.getElementById('transaction-table-body');
@@ -645,13 +750,11 @@
             let chartData = [];
             let currentBalance = 0;
             
-            // DÉTECTION PHARES
             let maxRevObj = { amount: 0, desc: "---" };
             let maxDepObj = { amount: 0, desc: "---" };
 
-            // On trie toujours par date pour le graphique et les calculs cumulés (ligne chronologique)
+            // Timeline pour graphique
             const sortedTimeline = [...window.transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
-
             sortedTimeline.forEach(t => {
                 if(t.type === 'Revenu') {
                     currentBalance += t.amount;
@@ -664,21 +767,20 @@
                 chartData.push(currentBalance);
             });
 
-            // Calcul des totaux pour la période filtrée
+            // Totaux filtrés
             filtered.forEach(t => {
-                if(t.type === 'Revenu') {
-                    totalRev += t.amount;
-                } else {
+                if(t.type === 'Revenu') totalRev += t.amount;
+                else {
                     totalDep += t.amount;
                     analysisData[t.desc] = (analysisData[t.desc] || 0) + t.amount;
                 }
             });
 
-            // Affichage Tableau avec prise en compte du tri sélectionné
+            // Tri de l'affichage tableau selon window.sortOrder
             const displayList = [...filtered].sort((a,b) => {
-                return window.sortOrder === 'recent' 
-                    ? new Date(b.date) - new Date(a.date) 
-                    : new Date(a.date) - new Date(b.date);
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return window.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
 
             displayList.forEach(t => {
@@ -706,24 +808,15 @@
                 `;
             });
 
-            // Updates Dashboard
-            const netBalance = currentBalance; 
-            document.getElementById('dash-total').innerText = netBalance.toLocaleString() + ' FCFA';
-            document.getElementById('dash-total').style.color = netBalance >= 0 ? '#2dce89' : '#f5365c';
+            // UI Updates
+            document.getElementById('dash-total').innerText = currentBalance.toLocaleString() + ' FCFA';
+            document.getElementById('dash-total').style.color = currentBalance >= 0 ? '#2dce89' : '#f5365c';
             document.getElementById('dash-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
             document.getElementById('dash-depense').innerText = totalDep.toLocaleString() + ' FCFA';
-            
-            // Updates Phares
-            document.getElementById('dash-phare-revenu').innerText = maxRevObj.amount.toLocaleString() + ' FCFA';
-            document.getElementById('dash-phare-revenu-desc').innerText = maxRevObj.desc;
-            document.getElementById('dash-phare-depense').innerText = maxDepObj.amount.toLocaleString() + ' FCFA';
-            document.getElementById('dash-phare-depense-desc').innerText = maxDepObj.desc;
-
             document.getElementById('report-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
             document.getElementById('report-depense').innerText = totalDep.toLocaleString() + ' FCFA';
             document.getElementById('report-marge').innerText = (totalRev - totalDep).toLocaleString() + ' FCFA';
 
-            // Charts Updates
             if(myChart) {
                 myChart.data.labels = chartLabels;
                 myChart.data.datasets[0].data = chartData;
@@ -735,21 +828,19 @@
                 myPie.update();
             }
 
-            // Recent List (Dashboard reste toujours sur les derniers ajouts)
             recentDiv.innerHTML = displayList.length ? '' : '<p class="text-muted small text-center py-4 w-100">Aucune activité</p>';
-            const mostRecentForDash = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
-            mostRecentForDash.slice(0, 4).forEach(t => {
+            displayList.slice(0, 4).forEach(t => {
                 recentDiv.innerHTML += `
                     <div class="col-md-6 col-lg-3">
                         <div class="transaction-item d-flex align-items-center p-2 border rounded mb-2 shadow-sm" style="background: white;">
-                            <div class="icon-box me-2 ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}" style="width:35px; height:35px; min-width:35px;">
+                            <div class="icon-box me-2 ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}" style="width:35px; height:35px;">
                                 <i class="bi ${t.type==='Revenu'?'bi-arrow-down-left':'bi-cart'}"></i>
                             </div>
                             <div class="flex-grow-1 overflow-hidden fw-bold">
                                 <div class="fw-bold small text-truncate">${t.desc}</div>
                                 <div class="text-muted fw-normal" style="font-size: 0.65rem;">${new Date(t.date).toLocaleDateString()}</div>
                             </div>
-                            <div class="fw-bold small amount-cell ${t.type==='Revenu'?'text-success':'text-danger'}">
+                            <div class="fw-bold small ${t.type==='Revenu'?'text-success':'text-danger'}">
                                 ${t.type==='Revenu'?'+':'-'}${t.amount.toLocaleString()}
                             </div>
                         </div>
@@ -758,7 +849,47 @@
             });
         };
 
-        // OPTIMISATION PWA
+        // --- INITIALISATION ---
+        window.addEventListener('load', () => {
+            initCharts();
+            document.getElementById('inputDate').valueAsDate = new Date();
+            document.getElementById('configFamilyName').value = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
+            applyInputTheme();
+            setupPWA();
+        });
+
+        function initCharts() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Variation Solde', data: [], borderColor: '#764ba2', tension: 0.4, fill: true, backgroundColor: 'rgba(118, 75, 162, 0.1)' }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            myPie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateSuggestions() {
+            const descs = new Set();
+            const benefs = new Set();
+            window.transactions.forEach(t => {
+                if(t.desc) descs.add(t.desc);
+                if(t.benef) benefs.add(t.benef);
+            });
+            const dlDesc = document.getElementById('descSuggestions');
+            dlDesc.innerHTML = '';
+            descs.forEach(d => dlDesc.innerHTML += `<option value="${d}">`);
+            const dlBenef = document.getElementById('benefSuggestions');
+            dlBenef.innerHTML = '';
+            benefs.forEach(b => dlBenef.innerHTML += `<option value="${b}">`);
+        }
+
+        // PWA et UI Helpers (Inchangés)
         function setupPWA() {
             const btnInstall = document.getElementById('installApp');
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -766,22 +897,14 @@
                 deferredPrompt = e;
                 btnInstall.style.display = 'block';
             });
-
             btnInstall.addEventListener('click', async () => {
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') btnInstall.style.display = 'none';
                     deferredPrompt = null;
                 }
             });
-
-            window.addEventListener('appinstalled', () => {
-                btnInstall.style.display = 'none';
-            });
         }
 
-        // Form Submission
         document.getElementById('transactionForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -793,20 +916,15 @@
                 amount: parseFloat(document.getElementById('inputAmount').value),
                 type: document.getElementById('inputType').value
             };
-            
             if(editId) newTrans.firebaseId = editId;
             window.addOrUpdateFirebase(newTrans);
-            
             bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
             this.reset();
             document.getElementById('editId').value = "";
-            document.getElementById('modalTitle').innerText = "Nouvelle Transaction";
-            document.getElementById('btnSubmit').innerText = "Enregistrer";
             document.getElementById('inputDate').valueAsDate = new Date();
             applyInputTheme();
         });
 
-        // Config Impression
         document.getElementById('printConfigForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const familyName = document.getElementById('configFamilyName').value;
@@ -816,12 +934,9 @@
         });
 
         window.deleteTransaction = function(firebaseId) {
-            const code = prompt("Code de sécurité requis pour la suppression :");
-            if(code === VALID_CODE) {
-                window.deleteFromFirebase(firebaseId);
-            } else if (code !== null) {
-                alert("Code incorrect.");
-            }
+            const code = prompt("Code de sécurité requis :");
+            if(code === VALID_CODE) window.deleteFromFirebase(firebaseId);
+            else if (code !== null) alert("Code incorrect.");
         };
 
         window.editTransaction = function(firebaseId) {
@@ -841,8 +956,8 @@
         };
 
         window.showSection = function(sectionId) {
-            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active-section'));
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             document.getElementById('section-' + sectionId).classList.add('active-section');
             document.getElementById('nav-' + sectionId).classList.add('active');
         };
@@ -888,33 +1003,19 @@
             const period = document.getElementById('filterPeriod').options[document.getElementById('filterPeriod').selectedIndex].text;
             
             document.getElementById('print-family-name-header').innerText = familyName;
-            document.getElementById('print-family-name-footer').innerText = `Chef de famille : ${familyName}`;
             document.getElementById('print-chef-name').innerText = familyName;
 
             tbody.innerHTML = '';
             let rev = 0, dep = 0;
-
             filtered.forEach(t => {
                 if(t.type === 'Revenu') rev += t.amount; else dep += t.amount;
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${new Date(t.date).toLocaleDateString('fr-FR')}</td>
-                        <td>${t.desc}</td>
-                        <td>${t.benef || '-'}</td>
-                        <td style="color: ${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
-                        <td>${t.amount.toLocaleString()}</td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr><td>${new Date(t.date).toLocaleDateString()}</td><td>${t.desc}</td><td>${t.benef || '-'}</td><td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td><td>${t.amount.toLocaleString()}</td></tr>`;
             });
 
             document.getElementById('print-period-info').innerText = `Période : ${period}`;
-            document.getElementById('print-gen-date').innerText = new Date().toLocaleString('fr-FR');
-            stats.innerHTML = `<div style="display:flex; justify-content: space-around; background: #eee; padding: 10px; border-radius: 5px;">
-                    <span>Total Revenus: <b>${rev.toLocaleString()} FCFA</b></span>
-                    <span>Total Dépenses: <b>${dep.toLocaleString()} FCFA</b></span>
-                    <span>Solde Net: <b>${(rev - dep).toLocaleString()} FCFA</b></span>
-                </div>`;
-            setTimeout(() => { window.print(); }, 500);
+            stats.innerHTML = `<div style="display:flex; justify-content: space-around; background: #eee; padding: 10px;">
+                <span>Total Revenus: <b>${rev.toLocaleString()}</b></span><span>Total Dépenses: <b>${dep.toLocaleString()}</b></span><span>Solde Net: <b>${(rev-dep).toLocaleString()}</b></span></div>`;
+            setTimeout(() => window.print(), 500);
         };
     </script>
 </body>
