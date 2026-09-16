@@ -180,14 +180,11 @@
             .signature-line { border-bottom: 1px solid black; width: 200px; display: inline-block; margin-top: 40px; }
         }
 
-        /* Notification Toast */
+        /* Notification Toast - désormais permanent dans le header */
         .sync-badge {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            z-index: 1050;
-            font-size: 0.75rem;
-            display: none;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            display: inline-block;
         }
 
         /* Nouveau Style Recherche */
@@ -198,10 +195,6 @@
     </style>
 </head>
 <body>
-
-    <div id="syncStatus" class="sync-badge badge rounded-pill bg-success shadow-sm">
-        <i class="bi bi-cloud-check me-1"></i> Synchronisé
-    </div>
 
     <div id="printArea">
         <div class="print-header d-flex justify-content-between align-items-center">
@@ -249,9 +242,14 @@
                 </a>
                 <div class="text-white-50 small" style="margin-top: -8px; font-size: 0.7rem;">Chef de famille : AMOUSSOU Atizoun Plateny</div>
             </div>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <div class="d-flex align-items-center">
+                <div id="syncStatus" class="sync-badge badge rounded-pill bg-success shadow-sm me-2">
+                    <i class="bi bi-cloud-check me-1"></i> Synchronisé
+                </div>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link active" href="#" id="nav-dashboard" onclick="showSection('dashboard')">Dashboard</a></li>
@@ -479,7 +477,14 @@
                             <label class="form-label text-muted small fw-bold">Date de l'opération</label>
                             <input type="date" id="inputDate" class="form-control rounded-3 fw-bold" required>
                         </div>
-                        <button type="submit" class="btn btn-gradient w-100 mt-3 py-3" id="btnSubmit">Enregistrer</button>
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button" class="btn btn-outline-warning w-50 py-3 fw-bold rounded-3" id="btnSchedule" onclick="scheduleTransaction()">
+                                <i class="bi bi-clock-history me-2"></i>Programmer
+                            </button>
+                            <button type="submit" class="btn btn-gradient w-50 py-3" id="btnSubmit">
+                                <i class="bi bi-play-fill me-2"></i>Exécuter
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -590,14 +595,11 @@
         onValue(connectedRef, (snap) => {
             const badge = document.getElementById('syncStatus');
             if (snap.val() === true) {
-                badge.className = "sync-badge badge rounded-pill bg-success shadow-sm";
+                badge.className = "sync-badge badge rounded-pill bg-success shadow-sm me-2";
                 badge.innerHTML = '<i class="bi bi-cloud-check me-1"></i> Synchronisé';
-                badge.style.display = "block";
-                setTimeout(() => badge.style.display = "none", 3000);
             } else {
-                badge.className = "sync-badge badge rounded-pill bg-warning text-dark shadow-sm";
+                badge.className = "sync-badge badge rounded-pill bg-warning text-dark shadow-sm me-2";
                 badge.innerHTML = '<i class="bi bi-cloud-slash me-1"></i> Mode Hors-ligne';
-                badge.style.display = "block";
             }
         });
 
@@ -627,6 +629,12 @@
         window.deleteFromFirebase = function(firebaseId) {
             const itemRef = ref(db, `transactions/${firebaseId}`);
             remove(itemRef);
+        };
+
+        // --- EXÉCUTER UNE TRANSACTION PROGRAMMÉE ---
+        window.executeTransaction = function(firebaseId) {
+            const itemRef = ref(db, `transactions/${firebaseId}`);
+            update(itemRef, { programmed: false });
         };
 
         // --- GESTION DU TRI ---
@@ -672,7 +680,7 @@
                 return;
             }
 
-            const filtered = window.transactions.filter(t => t.desc === selectedDesc);
+            const filtered = window.transactions.filter(t => t.desc === selectedDesc && t.programmed !== true);
             let total = 0;
             tbody.innerHTML = '';
 
@@ -710,7 +718,7 @@
             if(!desc) return alert("Sélectionnez une catégorie");
             
             const familyName = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
-            const filtered = window.transactions.filter(t => t.desc === desc);
+            const filtered = window.transactions.filter(t => t.desc === desc && t.programmed !== true);
             
             const tbody = document.getElementById('print-tbody');
             tbody.innerHTML = '';
@@ -739,7 +747,8 @@
 
         // --- LOGIQUE DE RENDU ---
         window.renderAll = function() {
-            const filtered = getFilteredTransactions();
+            const allFiltered = getFilteredTransactions();
+            const executedFiltered = allFiltered.filter(t => t.programmed !== true);
             const tbody = document.getElementById('transaction-table-body');
             const recentDiv = document.getElementById('recent-activities-list');
             
@@ -753,8 +762,10 @@
             let maxRevObj = { amount: 0, desc: "---", benef: "" };
             let maxDepObj = { amount: 0, desc: "---", benef: "" };
 
-            // Timeline pour graphique
-            const sortedTimeline = [...window.transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
+            // Timeline pour graphique - uniquement les transactions exécutées
+            const sortedTimeline = [...window.transactions]
+                .filter(t => t.programmed !== true)
+                .sort((a,b) => new Date(a.date) - new Date(b.date));
             sortedTimeline.forEach(t => {
                 if(t.type === 'Revenu') {
                     currentBalance += t.amount;
@@ -767,8 +778,8 @@
                 chartData.push(currentBalance);
             });
 
-            // Totaux filtrés
-            filtered.forEach(t => {
+            // Totaux filtrés - uniquement les transactions exécutées
+            executedFiltered.forEach(t => {
                 if(t.type === 'Revenu') totalRev += t.amount;
                 else {
                     totalDep += t.amount;
@@ -776,16 +787,17 @@
                 }
             });
 
-            // Tri de l'affichage tableau selon window.sortOrder
-            const displayList = [...filtered].sort((a,b) => {
+            // Tri de l'affichage tableau selon window.sortOrder (inclut les programmées)
+            const displayList = [...allFiltered].sort((a,b) => {
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
                 return window.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
 
             displayList.forEach(t => {
+                const isProgrammed = t.programmed === true;
                 tbody.innerHTML += `
-                    <tr class="fw-bold">
+                    <tr class="fw-bold ${isProgrammed ? 'table-warning' : ''}">
                         <td class="ps-4">
                             <div class="small fw-bold">${new Date(t.date).toLocaleDateString()}</div>
                             <div class="timestamp-detail"><i class="bi bi-clock me-1"></i>${t.created_at.split(' à ')[1] || '---'}</div>
@@ -794,12 +806,16 @@
                             <div class="fw-bold text-dark">${t.desc}</div>
                             <div class="text-muted small fw-normal">${t.benef || '-'}</div>
                         </td>
-                        <td><span class="badge ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}">${t.type}</span></td>
+                        <td>
+                            <span class="badge ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}">${t.type}</span>
+                            ${isProgrammed ? '<span class="badge bg-warning text-dark ms-1"><i class="bi bi-clock-history me-1"></i>Programmé</span>' : ''}
+                        </td>
                         <td class="text-end fw-bold amount-cell ${t.type==='Revenu'?'text-success':'text-danger'}">
                             ${t.type==='Revenu'?'+':'-'} ${t.amount.toLocaleString()}
                         </td>
                         <td class="text-center pe-4">
                             <div class="d-flex justify-content-center gap-2">
+                                ${isProgrammed ? `<button class="btn-action-min text-success" onclick="executeTransaction('${t.firebaseId}')" title="Exécuter"><i class="bi bi-play-circle-fill"></i></button>` : ''}
                                 <button class="btn-action-min text-primary" onclick="editTransaction('${t.firebaseId}')"><i class="bi bi-pencil-square"></i></button>
                                 <button class="btn-action-min text-danger" onclick="deleteTransaction('${t.firebaseId}')"><i class="bi bi-trash3"></i></button>
                             </div>
@@ -836,15 +852,16 @@
 
             recentDiv.innerHTML = displayList.length ? '' : '<p class="text-muted small text-center py-4 w-100">Aucune activité</p>';
             displayList.slice(0, 4).forEach(t => {
+                const isProgrammed = t.programmed === true;
                 recentDiv.innerHTML += `
                     <div class="col-md-6 col-lg-3">
-                        <div class="transaction-item d-flex align-items-center p-2 border rounded mb-2 shadow-sm" style="background: white;">
-                            <div class="icon-box me-2 ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}" style="width:35px; height:35px;">
-                                <i class="bi ${t.type==='Revenu'?'bi-arrow-down-left':'bi-cart'}"></i>
+                        <div class="transaction-item d-flex align-items-center p-2 border rounded mb-2 shadow-sm" style="background: white; ${isProgrammed ? 'opacity: 0.9;' : ''}">
+                            <div class="icon-box me-2 ${isProgrammed ? 'bg-warning-subtle text-warning' : (t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger')}" style="width:35px; height:35px;">
+                                <i class="bi ${isProgrammed ? 'bi-clock-history' : (t.type==='Revenu'?'bi-arrow-down-left':'bi-cart')}"></i>
                             </div>
                             <div class="flex-grow-1 overflow-hidden fw-bold">
                                 <div class="fw-bold small text-truncate">${t.desc}</div>
-                                <div class="text-muted fw-normal" style="font-size: 0.65rem;">${new Date(t.date).toLocaleDateString()} ${t.created_at.split(' à ')[1] || ''}</div>
+                                <div class="text-muted fw-normal" style="font-size: 0.65rem;">${new Date(t.date).toLocaleDateString()} ${t.created_at.split(' à ')[1] || ''}${isProgrammed ? ' • <span class="text-warning fw-bold">Programmé</span>' : ''}</div>
                             </div>
                             <div class="fw-bold small ${t.type==='Revenu'?'text-success':'text-danger'}">
                                 ${t.type==='Revenu'?'+':'-'}${t.amount.toLocaleString()}
@@ -914,13 +931,12 @@
             document.getElementById('transactionForm').reset();
             document.getElementById('editId').value = "";
             document.getElementById('modalTitle').innerText = "Nouvelle Transaction";
-            document.getElementById('btnSubmit').innerText = "Enregistrer";
             document.getElementById('inputDate').valueAsDate = new Date();
             applyInputTheme();
         };
 
-        document.getElementById('transactionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Fonction utilitaire pour construire les données du formulaire
+        function buildTransactionData() {
             const editId = document.getElementById('editId').value;
             const newTrans = {
                 date: new Date(document.getElementById('inputDate').value).toISOString(),
@@ -931,12 +947,34 @@
                 type: document.getElementById('inputType').value
             };
             if(editId) newTrans.firebaseId = editId;
+            return newTrans;
+        }
+
+        // Enregistrement classique (exécuté) - bouton "Exécuter"
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newTrans = buildTransactionData();
+            newTrans.programmed = false;
             window.addOrUpdateFirebase(newTrans);
             bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
             this.reset();
             document.getElementById('editId').value = "";
             applyInputTheme();
         });
+
+        // Programmation - bouton "Programmer"
+        window.scheduleTransaction = function() {
+            const form = document.getElementById('transactionForm');
+            if(!form.reportValidity()) return;
+
+            const newTrans = buildTransactionData();
+            newTrans.programmed = true;
+            window.addOrUpdateFirebase(newTrans);
+            bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+            form.reset();
+            document.getElementById('editId').value = "";
+            applyInputTheme();
+        };
 
         document.getElementById('printConfigForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -962,7 +1000,6 @@
                 document.getElementById('inputAmount').value = t.amount;
                 document.getElementById('inputDate').value = t.date.split('T')[0];
                 document.getElementById('modalTitle').innerText = "Modifier Transaction";
-                document.getElementById('btnSubmit').innerText = "Mettre à jour";
                 applyInputTheme();
                 new bootstrap.Modal(document.getElementById('addModal')).show();
             }
@@ -1010,7 +1047,7 @@
         };
 
         window.generateProfessionalPrint = function(familyName) {
-            const filtered = getFilteredTransactions().sort((a,b) => new Date(b.date) - new Date(a.date));
+            const filtered = getFilteredTransactions().filter(t => t.programmed !== true).sort((a,b) => new Date(b.date) - new Date(a.date));
             const tbody = document.getElementById('print-tbody');
             const stats = document.getElementById('print-stats');
             const period = document.getElementById('filterPeriod').options[document.getElementById('filterPeriod').selectedIndex].text;
