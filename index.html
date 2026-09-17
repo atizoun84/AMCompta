@@ -269,6 +269,7 @@
                     <th>Description</th>
                     <th>Bénéficiaire</th>
                     <th>Type</th>
+                    <th>Statut</th>
                     <th>Montant (FCFA)</th>
                 </tr>
             </thead>
@@ -942,6 +943,8 @@
                         <td>${t.desc}</td>
                         <td>${t.benef || '-'}</td>
                         <td style="color: ${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
+                        <td>${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
+                        <td style="color: green;">Exécuté</td>
                         <td>${t.amount.toLocaleString()}</td>
                     </tr>
                 `;
@@ -1387,7 +1390,9 @@
         };
 
         window.generateProfessionalPrint = function(/** @type {string} */ familyName) {
-            const filtered = getFilteredTransactions().filter(/** @param {any} t */ t => t.programmed !== true).sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(b.date) - new Date(a.date));
+            // MODIFIÉ: On inclut désormais TOUTES les transactions (exécutées ET programmées)
+            // On garde le tri par date (plus récentes en premier)
+            const filtered = getFilteredTransactions().sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(b.date) - new Date(a.date));
             const tbody = document.getElementById('print-tbody');
             const stats = document.getElementById('print-stats');
             const period = document.getElementById('filterPeriod').options[document.getElementById('filterPeriod').selectedIndex].text;
@@ -1397,25 +1402,46 @@
 
             tbody.innerHTML = '';
             let rev = 0, dep = 0;
+            let progRev = 0, progDep = 0;
+            
             filtered.forEach(/** @param {any} t */ t => {
-                if(t.type === 'Revenu') rev += t.amount; else dep += t.amount;
-                tbody.innerHTML += `<tr><td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td><td>${t.desc}</td><td>${t.benef || '-'}</td><td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td><td>${t.amount.toLocaleString()}</td></tr>`;
+                const isProgrammed = t.programmed === true;
+                // MODIFIÉ: On ajoute la colonne Statut et on distingue les totaux exécutés des programmés
+                if(isProgrammed) {
+                    if(t.type === 'Revenu') progRev += t.amount;
+                    else progDep += t.amount;
+                } else {
+                    if(t.type === 'Revenu') rev += t.amount;
+                    else dep += t.amount;
+                }
+                
+                const statusText = isProgrammed ? 'Programmé' : 'Exécuté';
+                const statusColor = isProgrammed ? '#d4a017' : 'green';
+                const statusBadge = isProgrammed ? '⏳' : '✅';
+                
+                tbody.innerHTML += `<tr>
+                    <td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td>
+                    <td>${t.desc}</td>
+                    <td>${t.benef || '-'}</td>
+                    <td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td>
+                    <td style="color:${statusColor}; font-weight: bold;">${statusBadge} ${statusText}</td>
+                    <td>${t.amount.toLocaleString()}</td>
+                </tr>`;
             });
 
-            // NOUVEAU: Calcul du solde prévisionnel pour l'impression
-            let progRev = 0, progDep = 0;
-            window.transactions.filter(/** @param {any} t */ t => t.programmed === true).forEach(/** @param {any} t */ t => {
-                if(t.type === 'Revenu') progRev += t.amount;
-                else progDep += t.amount;
-            });
+            // Calcul du solde prévisionnel global
             const forecastBalance = (rev - dep) + progRev - progDep;
 
             document.getElementById('print-period-info').innerText = `Période : ${period}`;
-            // NOUVEAU: Ajout du solde prévisionnel dans les stats imprimées
+            // MODIFIÉ: Affichage détaillé avec totaux exécutés, programmés et prévisionnel
             stats.innerHTML = `<div style="display:flex; justify-content: space-around; background: #eee; padding: 10px;">
-                <span>Total Revenus: <b>${rev.toLocaleString()}</b></span><span>Total Dépenses: <b>${dep.toLocaleString()}</b></span><span>Solde Net: <b>${(rev-dep).toLocaleString()}</b></span></div>
-                <div style="text-align:center; background: #fff8dc; padding: 8px; margin-top: 5px; border: 1px solid #d4a017;">
-                    <span><b>Solde Prévisionnel (avec transactions programmées) : ${forecastBalance.toLocaleString()} FCFA</b></span>
+                <span>Total Revenus exécutés: <b>${rev.toLocaleString()}</b></span>
+                <span>Total Dépenses exécutées: <b>${dep.toLocaleString()}</b></span>
+                <span>Solde Net: <b>${(rev-dep).toLocaleString()}</b></span></div>
+                <div style="display:flex; justify-content: space-around; background: #fff8dc; padding: 8px; margin-top: 5px; border: 1px solid #d4a017;">
+                    <span>Revenus programmés: <b>${progRev.toLocaleString()}</b></span>
+                    <span>Dépenses programmées: <b>${progDep.toLocaleString()}</b></span>
+                    <span>Solde Prévisionnel: <b>${forecastBalance.toLocaleString()} FCFA</b></span>
                 </div>`;
             setTimeout(() => window.print(), 500);
         };
