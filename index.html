@@ -226,6 +226,25 @@
             width: 100%;
             margin-top: 10px;
         }
+
+        /* --- STYLES CALCULATRICE --- */
+        .calc-btn {
+            font-size: 1.2rem;
+            transition: all 0.1s;
+            border-color: #4a4a5e;
+            color: #fff;
+        }
+        .calc-btn:hover {
+            background-color: #4a4a5e;
+            color: #fff;
+            transform: scale(0.98);
+        }
+        .calc-btn:active {
+            transform: scale(0.95);
+        }
+        #calcDisplay {
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
@@ -277,9 +296,15 @@
                 <div class="text-white-50 small" style="margin-top: -8px; font-size: 0.7rem;">Chef de famille : AMOUSSOU Atizoun Plateny</div>
             </div>
             <div class="d-flex align-items-center gap-2">
+                <!-- Solde Actuel -->
                 <div id="header-balance" class="header-balance-box">
                     <small>Solde disponible</small>
                     <span id="header-balance-value">0 FCFA</span>
+                </div>
+                <!-- NOUVEAU: Solde Prévisionnel -->
+                <div id="header-forecast-balance" class="header-balance-box" style="border-color: rgba(255, 215, 0, 0.6); background: rgba(255, 215, 0, 0.15);">
+                    <small style="color: #ffe066;"><i class="bi bi-graph-up-arrow me-1"></i>Solde prévisionnel</small>
+                    <span id="header-forecast-value" style="color: #ffe066;">0 FCFA</span>
                 </div>
                 <div id="syncStatus" class="sync-badge badge rounded-pill bg-success shadow-sm">
                     <i class="bi bi-cloud-check me-1"></i> Synchronisé
@@ -322,6 +347,12 @@
                         <h1 class="display-4 fw-bold mt-2 mb-0" id="dash-total" style="font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -1px;">0 FCFA</h1>
                         <div class="mt-2">
                             <span id="balance-badge" class="badge rounded-pill px-3 py-2">---</span>
+                        </div>
+                        <!-- NOUVEAU: Affichage du solde prévisionnel sur le dashboard -->
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-uppercase text-muted fw-bold letter-spacing-1"><i class="bi bi-graph-up-arrow me-1"></i>Solde Prévisionnel</small>
+                            <h4 class="fw-bold mt-1 mb-0" id="dash-forecast" style="color: #d4a017;">0 FCFA</h4>
+                            <small class="text-muted fst-italic">Inclut les transactions programmées</small>
                         </div>
                     </div>
                 </div>
@@ -464,6 +495,11 @@
                                 <span>Marge Nette</span>
                                 <span class="fw-bold text-primary" id="report-marge">0 FCFA</span>
                             </li>
+                            <!-- NOUVEAU: Ligne Solde Prévisionnel dans le résumé -->
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-top">
+                                <span><i class="bi bi-graph-up-arrow me-1 text-warning"></i>Solde Prévisionnel</span>
+                                <span class="fw-bold" id="report-forecast" style="color: #d4a017;">0 FCFA</span>
+                            </li>
                         </ul>
                         <div class="d-flex flex-column gap-2 mt-4">
                             <button class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="openAnalysisModal()">
@@ -499,17 +535,22 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-bold">Description</label>
-                            <input type="text" id="inputDesc" class="form-control rounded-3 fw-bold" placeholder="Ex: Achat fournitures" list="descSuggestions" required>
+                            <input type="text" id="inputDesc" class="form-control rounded-3 fw-bold" placeholder="Ex: Achat fournitures" required>
                             <datalist id="descSuggestions"></datalist>
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-bold">Bénéficiaire</label>
-                            <input type="text" id="inputBenef" class="form-control rounded-3 fw-bold" placeholder="Nom de la personne ou entreprise" list="benefSuggestions">
+                            <input type="text" id="inputBenef" class="form-control rounded-3 fw-bold" placeholder="Nom de la personne ou entreprise">
                             <datalist id="benefSuggestions"></datalist>
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-bold">Montant</label>
-                            <input type="number" id="inputAmount" class="form-control rounded-3 fw-bold" placeholder="0.00" required>
+                            <div class="input-group">
+                                <button class="btn btn-outline-primary rounded-start-3" type="button" onclick="openCalculator()" title="Ouvrir la calculatrice">
+                                    <i class="bi bi-calculator"></i>
+                                </button>
+                                <input type="number" id="inputAmount" class="form-control rounded-end-3 fw-bold" placeholder="0.00" required>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-bold">Date de l'opération</label>
@@ -600,12 +641,98 @@
         </div>
     </div>
 
+    <!-- MODAL: Détails de la transaction -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 bg-light rounded-top-4">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-info-circle me-2"></i>Détails de la Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Date & Heure</div>
+                        <div class="col-sm-8 fw-bold text-dark" id="detail-date">---</div>
+                        
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Description</div>
+                        <div class="col-sm-8 fw-bold text-dark" id="detail-desc">---</div>
+                        
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Bénéficiaire</div>
+                        <div class="col-sm-8 fw-bold text-dark" id="detail-benef">---</div>
+                        
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Type</div>
+                        <div class="col-sm-8" id="detail-type">---</div>
+                        
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Montant</div>
+                        <div class="col-sm-8 fw-bold" id="detail-amount">---</div>
+                        
+                        <div class="col-sm-4 text-muted small fw-bold text-uppercase">Statut</div>
+                        <div class="col-sm-8" id="detail-status">---</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light rounded-bottom-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Fermer</button>
+                    <div class="d-flex gap-2" id="detail-actions">
+                        <!-- Les boutons d'action seront insérés ici dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Calculatrice -->
+    <div class="modal fade" id="calculatorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #1e1e2d;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-white mb-0"><i class="bi bi-calculator me-2"></i>Calculatrice</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Display -->
+                    <input type="text" id="calcDisplay" class="form-control text-end fw-bold fs-3 mb-3 border-0 rounded-3" style="background: #2b2b40; color: #fff; height: 60px;" readonly value="0">
+                    
+                    <!-- Keypad -->
+                    <div class="row g-2">
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="clearCalc()">C</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="backspaceCalc()"><i class="bi bi-backspace"></i></button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('/')">/</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('*')">*</button></div>
+                        
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('7')">7</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('8')">8</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('9')">9</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('-')">-</button></div>
+                        
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('4')">4</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('5')">5</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('6')">6</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('+')">+</button></div>
+                        
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('1')">1</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('2')">2</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('3')">3</button></div>
+                        <div class="col-3"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('.')">.</button></div>
+                        
+                        <div class="col-6"><button class="btn btn-outline-light w-100 py-3 fw-bold rounded-3 calc-btn" onclick="appendCalcValue('0')">0</button></div>
+                        <div class="col-6"><button class="btn btn-success w-100 py-3 fw-bold rounded-3 calc-btn" onclick="calculateResult()">=</button></div>
+                    </div>
+                    
+                    <!-- Validate Button -->
+                    <button class="btn btn-gradient w-100 mt-3 py-3 fw-bold rounded-3" onclick="applyAmount()">
+                        <i class="bi bi-check-circle me-2"></i>Valider
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDeDimpSkIPtx9mTfg00Ra67MIpBCyh6GY",
@@ -630,7 +757,7 @@
 
         // Synchronisation Firebase
         const connectedRef = ref(db, ".info/connected");
-        onValue(connectedRef, (snap) => {
+        onValue(connectedRef, (/** @type {any} */ snap) => {
             const badge = document.getElementById('syncStatus');
             if (snap.val() === true) {
                 badge.className = "sync-badge badge rounded-pill bg-success shadow-sm";
@@ -641,7 +768,7 @@
             }
         });
 
-        onValue(transactionsRef, (snapshot) => {
+        onValue(transactionsRef, (/** @type {any} */ snapshot) => {
             const data = snapshot.val();
             window.transactions = [];
             if (data) {
@@ -654,7 +781,7 @@
         });
 
         // Fonctions CRUD
-        window.addOrUpdateFirebase = function(trans) {
+        window.addOrUpdateFirebase = function(/** @type {any} */ trans) {
             if (trans.firebaseId) {
                 const itemRef = ref(db, `transactions/${trans.firebaseId}`);
                 const { firebaseId, ...cleanData } = trans;
@@ -664,13 +791,13 @@
             }
         };
 
-        window.deleteFromFirebase = function(firebaseId) {
+        window.deleteFromFirebase = function(/** @type {string} */ firebaseId) {
             const itemRef = ref(db, `transactions/${firebaseId}`);
             remove(itemRef);
         };
 
         // --- EXÉCUTER UNE TRANSACTION PROGRAMMÉE ---
-        window.executeTransaction = function(firebaseId) {
+        window.executeTransaction = function(/** @type {string} */ firebaseId) {
             const itemRef = ref(db, `transactions/${firebaseId}`);
             update(itemRef, { programmed: false });
         };
@@ -692,10 +819,55 @@
             renderAll();
         };
 
+        // --- FONCTION: AFFICHER LES DÉTAILS ---
+        window.openDetailModal = function(/** @type {string} */ firebaseId) {
+            const t = window.transactions.find(/** @param {any} item */ item => item.firebaseId === firebaseId);
+            if(!t) return;
+            
+            document.getElementById('detail-date').innerText = `${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}`;
+            document.getElementById('detail-desc').innerText = t.desc;
+            document.getElementById('detail-benef').innerText = t.benef || '-';
+            document.getElementById('detail-type').innerHTML = `<span class="badge ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}">${t.type}</span>`;
+            document.getElementById('detail-amount').innerHTML = `<span class="${t.type==='Revenu'?'text-success':'text-danger'} fs-5">${t.type==='Revenu'?'+':'-'} ${t.amount.toLocaleString()} FCFA</span>`;
+            
+            const statusEl = document.getElementById('detail-status');
+            if (t.programmed) {
+                statusEl.innerHTML = '<span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Programmé</span>';
+            } else {
+                statusEl.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Exécuté</span>';
+            }
+
+            const actionsEl = document.getElementById('detail-actions');
+            actionsEl.innerHTML = '';
+            
+            if (t.programmed) {
+                actionsEl.innerHTML += `<button class="btn btn-success rounded-pill px-3" onclick="executeFromDetail('${t.firebaseId}')"><i class="bi bi-play-circle me-1"></i>Exécuter</button>`;
+            }
+            actionsEl.innerHTML += `<button class="btn btn-primary rounded-pill px-3" onclick="editFromDetail('${t.firebaseId}')"><i class="bi bi-pencil-square me-1"></i>Modifier</button>`;
+            actionsEl.innerHTML += `<button class="btn btn-danger rounded-pill px-3" onclick="deleteFromDetail('${t.firebaseId}')"><i class="bi bi-trash3 me-1"></i>Supprimer</button>`;
+
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        };
+
+        window.executeFromDetail = function(/** @type {string} */ firebaseId) {
+            bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+            window.executeTransaction(firebaseId);
+        };
+
+        window.editFromDetail = function(/** @type {string} */ firebaseId) {
+            bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+            window.editTransaction(firebaseId);
+        };
+
+        window.deleteFromDetail = function(/** @type {string} */ firebaseId) {
+            bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+            window.deleteTransaction(firebaseId);
+        };
+
         // --- ANALYSE DÉTAILLÉE ---
         window.openAnalysisModal = function() {
             const select = document.getElementById('analysisSelect');
-            const descriptions = [...new Set(window.transactions.map(t => t.desc))].sort();
+            const descriptions = [...new Set(window.transactions.map(/** @param {any} t */ t => t.desc))].sort();
             
             select.innerHTML = '<option value="">Choisir une catégorie...</option>';
             descriptions.forEach(desc => {
@@ -718,11 +890,11 @@
                 return;
             }
 
-            const filtered = window.transactions.filter(t => t.desc === selectedDesc && t.programmed !== true);
+            const filtered = window.transactions.filter(/** @param {any} t */ t => t.desc === selectedDesc && t.programmed !== true);
             let total = 0;
             tbody.innerHTML = '';
 
-            filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
+            filtered.sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(b.date) - new Date(a.date)).forEach(/** @param {any} t */ t => {
                 total += t.amount;
                 tbody.innerHTML += `
                     <tr>
@@ -756,13 +928,13 @@
             if(!desc) return alert("Sélectionnez une catégorie");
             
             const familyName = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
-            const filtered = window.transactions.filter(t => t.desc === desc && t.programmed !== true);
+            const filtered = window.transactions.filter(/** @param {any} t */ t => t.desc === desc && t.programmed !== true);
             
             const tbody = document.getElementById('print-tbody');
             tbody.innerHTML = '';
             let total = 0;
 
-            filtered.forEach(t => {
+            filtered.forEach(/** @param {any} t */ t => {
                 total += t.amount;
                 tbody.innerHTML += `
                     <tr>
@@ -786,12 +958,13 @@
         // --- LOGIQUE DE RENDU ---
         window.renderAll = function() {
             const allFiltered = getFilteredTransactions();
-            const executedFiltered = allFiltered.filter(t => t.programmed !== true);
+            const executedFiltered = allFiltered.filter(/** @param {any} t */ t => t.programmed !== true);
             const tbody = document.getElementById('transaction-table-body');
             const recentDiv = document.getElementById('recent-activities-list');
             
             tbody.innerHTML = '';
             let totalRev = 0, totalDep = 0;
+            let programmedRev = 0, programmedDep = 0;
             let analysisData = {};
             let chartLabels = [];
             let chartData = [];
@@ -802,9 +975,9 @@
 
             // Timeline pour graphique - uniquement les transactions exécutées
             const sortedTimeline = [...window.transactions]
-                .filter(t => t.programmed !== true)
-                .sort((a,b) => new Date(a.date) - new Date(b.date));
-            sortedTimeline.forEach(t => {
+                .filter(/** @param {any} t */ t => t.programmed !== true)
+                .sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(a.date) - new Date(b.date));
+            sortedTimeline.forEach(/** @param {any} t */ t => {
                 if(t.type === 'Revenu') {
                     currentBalance += t.amount;
                     if(t.amount > maxRevObj.amount) maxRevObj = t;
@@ -816,8 +989,15 @@
                 chartData.push(currentBalance);
             });
 
+            // Calcul du solde prévisionnel
+            window.transactions.filter(/** @param {any} t */ t => t.programmed === true).forEach(/** @param {any} t */ t => {
+                if(t.type === 'Revenu') programmedRev += t.amount;
+                else programmedDep += t.amount;
+            });
+            const forecastBalance = currentBalance + programmedRev - programmedDep;
+
             // Totaux filtrés - uniquement les transactions exécutées
-            executedFiltered.forEach(t => {
+            executedFiltered.forEach(/** @param {any} t */ t => {
                 if(t.type === 'Revenu') totalRev += t.amount;
                 else {
                     totalDep += t.amount;
@@ -826,16 +1006,17 @@
             });
 
             // Tri de l'affichage tableau selon window.sortOrder (inclut les programmées)
-            const displayList = [...allFiltered].sort((a,b) => {
+            const displayList = [...allFiltered].sort((/** @type {any} */ a, /** @type {any} */ b) => {
                 const dateA = new Date(a.date);
                 const dateB = new Date(b.date);
                 return window.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
 
-            displayList.forEach(t => {
+            displayList.forEach(/** @param {any} t */ t => {
                 const isProgrammed = t.programmed === true;
+                // Ajout de l'événement onclick sur la ligne et du curseur pointer
                 tbody.innerHTML += `
-                    <tr class="fw-bold ${isProgrammed ? 'table-warning' : ''}">
+                    <tr class="fw-bold ${isProgrammed ? 'table-warning' : ''}" onclick="openDetailModal('${t.firebaseId}')" style="cursor: pointer;">
                         <td class="ps-4">
                             <div class="small fw-bold">${new Date(t.date).toLocaleDateString()}</div>
                             <div class="timestamp-detail"><i class="bi bi-clock me-1"></i>${t.created_at.split(' à ')[1] || '---'}</div>
@@ -853,9 +1034,10 @@
                         </td>
                         <td class="text-center pe-4">
                             <div class="d-flex justify-content-center gap-2">
-                                ${isProgrammed ? `<button class="btn-action-min text-success" onclick="executeTransaction('${t.firebaseId}')" title="Exécuter"><i class="bi bi-play-circle-fill"></i></button>` : ''}
-                                <button class="btn-action-min text-primary" onclick="editTransaction('${t.firebaseId}')"><i class="bi bi-pencil-square"></i></button>
-                                <button class="btn-action-min text-danger" onclick="deleteTransaction('${t.firebaseId}')"><i class="bi bi-trash3"></i></button>
+                                <!-- event.stopPropagation() pour éviter d'ouvrir la modale de détails lors du clic sur les actions -->
+                                ${isProgrammed ? `<button class="btn-action-min text-success" onclick="event.stopPropagation(); executeTransaction('${t.firebaseId}')" title="Exécuter"><i class="bi bi-play-circle-fill"></i></button>` : ''}
+                                <button class="btn-action-min text-primary" onclick="event.stopPropagation(); editTransaction('${t.firebaseId}')"><i class="bi bi-pencil-square"></i></button>
+                                <button class="btn-action-min text-danger" onclick="event.stopPropagation(); deleteTransaction('${t.firebaseId}')"><i class="bi bi-trash3"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -871,10 +1053,29 @@
             document.getElementById('report-depense').innerText = totalDep.toLocaleString() + ' FCFA';
             document.getElementById('report-marge').innerText = (totalRev - totalDep).toLocaleString() + ' FCFA';
 
+            // NOUVEAU: Mise à jour du Solde Prévisionnel sur le Dashboard
+            const dashForecast = document.getElementById('dash-forecast');
+            if (dashForecast) {
+                dashForecast.innerText = forecastBalance.toLocaleString() + ' FCFA';
+                dashForecast.style.color = forecastBalance >= 0 ? '#d4a017' : '#f5365c';
+            }
+
+            // NOUVEAU: Mise à jour du Solde Prévisionnel dans le résumé des rapports
+            const reportForecast = document.getElementById('report-forecast');
+            if (reportForecast) {
+                reportForecast.innerText = forecastBalance.toLocaleString() + ' FCFA';
+            }
+
             // Mise à jour du Solde disponible dans le header (permanent)
             const headerBalance = document.getElementById('header-balance-value');
             if (headerBalance) {
                 headerBalance.innerText = currentBalance.toLocaleString() + ' FCFA';
+            }
+
+            // Mise à jour du Solde prévisionnel dans le header
+            const headerForecast = document.getElementById('header-forecast-value');
+            if (headerForecast) {
+                headerForecast.innerText = forecastBalance.toLocaleString() + ' FCFA';
             }
 
             // Mise à jour des Phares
@@ -895,7 +1096,7 @@
             }
 
             recentDiv.innerHTML = displayList.length ? '' : '<p class="text-muted small text-center py-4 w-100">Aucune activité</p>';
-            displayList.slice(0, 4).forEach(t => {
+            displayList.slice(0, 4).forEach(/** @param {any} t */ t => {
                 const isProgrammed = t.programmed === true;
                 recentDiv.innerHTML += `
                     <div class="col-md-6 col-lg-3">
@@ -921,6 +1122,8 @@
             initCharts();
             document.getElementById('configFamilyName').value = localStorage.getItem('amcompta_family_name') || "Famille AMOUSSOU";
             setupPWA();
+            setupAutoComplete('inputDesc', 'descSuggestions');
+            setupAutoComplete('inputBenef', 'benefSuggestions');
         });
 
         function initCharts() {
@@ -942,7 +1145,7 @@
         function updateSuggestions() {
             const descs = new Set();
             const benefs = new Set();
-            window.transactions.forEach(t => {
+            window.transactions.forEach(/** @param {any} t */ t => {
                 if(t.desc) descs.add(t.desc);
                 if(t.benef) benefs.add(t.benef);
             });
@@ -969,6 +1172,99 @@
                 }
             });
         }
+
+        // Fonction d'auto-complétion intelligente
+        function setupAutoComplete(inputId, datalistId) {
+            const input = document.getElementById(inputId);
+            const datalist = document.getElementById(datalistId);
+            if (!input || !datalist) return;
+
+            // Retirer l'attribut list pour désactiver la liste déroulante native du navigateur
+            input.removeAttribute('list');
+
+            input.addEventListener('input', function(e) {
+                // Ne pas auto-compléter si l'utilisateur efface du texte
+                if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward') {
+                    return;
+                }
+
+                const val = this.value;
+                if (val.length === 0) return;
+
+                // Trouver la première correspondance qui commence par la valeur saisie
+                const options = Array.from(datalist.options).map(opt => opt.value);
+                const match = options.find(opt => opt.toLowerCase().startsWith(val.toLowerCase()));
+
+                if (match) {
+                    // Remplir le champ avec la suggestion complète
+                    this.value = match;
+                    // Sélectionner le reste du texte pour permettre à l'utilisateur de le modifier ou de le remplacer
+                    this.setSelectionRange(val.length, match.length);
+                }
+            });
+        }
+
+        // --- LOGIQUE CALCULATRICE ---
+        window.openCalculator = function() {
+            const amountInput = document.getElementById('inputAmount');
+            const currentAmount = amountInput.value;
+            
+            // Si un montant est déjà présent (lors d'une modification), l'afficher dans la calculatrice
+            // Sinon, afficher '0'
+            document.getElementById('calcDisplay').value = currentAmount !== '' ? currentAmount : '0';
+            
+            new bootstrap.Modal(document.getElementById('calculatorModal')).show();
+        };
+
+        window.appendCalcValue = function(val) {
+            const display = document.getElementById('calcDisplay');
+            if (display.value === '0' || display.value === 'Erreur') {
+                display.value = val;
+            } else {
+                display.value += val;
+            }
+        };
+
+        window.clearCalc = function() {
+            document.getElementById('calcDisplay').value = '0';
+        };
+
+        window.backspaceCalc = function() {
+            const display = document.getElementById('calcDisplay');
+            if (display.value.length > 1) {
+                display.value = display.value.slice(0, -1);
+            } else {
+                display.value = '0';
+            }
+        };
+
+        window.calculateResult = function() {
+            const display = document.getElementById('calcDisplay');
+            try {
+                // Utilisation de Function pour évaluer l'expression de manière plus sécurisée que eval()
+                const result = new Function('return ' + display.value)();
+                if (result === Infinity || isNaN(result)) {
+                    display.value = 'Erreur';
+                } else {
+                    // Arrondir à 2 décimales si nécessaire
+                    display.value = Math.round(result * 100) / 100;
+                }
+            } catch (e) {
+                display.value = 'Erreur';
+            }
+        };
+
+        window.applyAmount = function() {
+            const display = document.getElementById('calcDisplay');
+            const amountInput = document.getElementById('inputAmount');
+            
+            // Vérifier si le résultat est valide
+            if (display.value !== 'Erreur' && display.value !== '') {
+                amountInput.value = display.value;
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('calculatorModal')).hide();
+        };
 
         // Préparer le modal d'ajout avec la date courante
         window.prepareAddModal = function() {
@@ -1028,14 +1324,14 @@
             generateProfessionalPrint(familyName);
         });
 
-        window.deleteTransaction = function(firebaseId) {
+        window.deleteTransaction = function(/** @type {string} */ firebaseId) {
             const code = prompt("Code de sécurité requis :");
             if(code === VALID_CODE) window.deleteFromFirebase(firebaseId);
             else if (code !== null) alert("Code incorrect.");
         };
 
-        window.editTransaction = function(firebaseId) {
-            const t = window.transactions.find(item => item.firebaseId === firebaseId);
+        window.editTransaction = function(/** @type {string} */ firebaseId) {
+            const t = window.transactions.find(/** @param {any} item */ item => item.firebaseId === firebaseId);
             if(t) {
                 document.getElementById('editId').value = t.firebaseId;
                 document.getElementById('inputType').value = t.type;
@@ -1049,7 +1345,7 @@
             }
         };
 
-        window.showSection = function(sectionId) {
+        window.showSection = function(/** @type {string} */ sectionId) {
             document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-section'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             document.getElementById('section-' + sectionId).classList.add('active-section');
@@ -1069,7 +1365,7 @@
             const period = document.getElementById('filterPeriod').value;
             const search = document.getElementById('searchInput').value.toLowerCase();
             const now = new Date();
-            return window.transactions.filter(t => {
+            return window.transactions.filter(/** @param {any} t */ t => {
                 const tDate = new Date(t.date);
                 let matchP = true;
                 if(period === 'day') matchP = tDate.toDateString() === now.toDateString();
@@ -1090,8 +1386,8 @@
             });
         };
 
-        window.generateProfessionalPrint = function(familyName) {
-            const filtered = getFilteredTransactions().filter(t => t.programmed !== true).sort((a,b) => new Date(b.date) - new Date(a.date));
+        window.generateProfessionalPrint = function(/** @type {string} */ familyName) {
+            const filtered = getFilteredTransactions().filter(/** @param {any} t */ t => t.programmed !== true).sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(b.date) - new Date(a.date));
             const tbody = document.getElementById('print-tbody');
             const stats = document.getElementById('print-stats');
             const period = document.getElementById('filterPeriod').options[document.getElementById('filterPeriod').selectedIndex].text;
@@ -1101,14 +1397,26 @@
 
             tbody.innerHTML = '';
             let rev = 0, dep = 0;
-            filtered.forEach(t => {
+            filtered.forEach(/** @param {any} t */ t => {
                 if(t.type === 'Revenu') rev += t.amount; else dep += t.amount;
                 tbody.innerHTML += `<tr><td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td><td>${t.desc}</td><td>${t.benef || '-'}</td><td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td><td>${t.amount.toLocaleString()}</td></tr>`;
             });
 
+            // NOUVEAU: Calcul du solde prévisionnel pour l'impression
+            let progRev = 0, progDep = 0;
+            window.transactions.filter(/** @param {any} t */ t => t.programmed === true).forEach(/** @param {any} t */ t => {
+                if(t.type === 'Revenu') progRev += t.amount;
+                else progDep += t.amount;
+            });
+            const forecastBalance = (rev - dep) + progRev - progDep;
+
             document.getElementById('print-period-info').innerText = `Période : ${period}`;
+            // NOUVEAU: Ajout du solde prévisionnel dans les stats imprimées
             stats.innerHTML = `<div style="display:flex; justify-content: space-around; background: #eee; padding: 10px;">
-                <span>Total Revenus: <b>${rev.toLocaleString()}</b></span><span>Total Dépenses: <b>${dep.toLocaleString()}</b></span><span>Solde Net: <b>${(rev-dep).toLocaleString()}</b></span></div>`;
+                <span>Total Revenus: <b>${rev.toLocaleString()}</b></span><span>Total Dépenses: <b>${dep.toLocaleString()}</b></span><span>Solde Net: <b>${(rev-dep).toLocaleString()}</b></span></div>
+                <div style="text-align:center; background: #fff8dc; padding: 8px; margin-top: 5px; border: 1px solid #d4a017;">
+                    <span><b>Solde Prévisionnel (avec transactions programmées) : ${forecastBalance.toLocaleString()} FCFA</b></span>
+                </div>`;
             setTimeout(() => window.print(), 500);
         };
     </script>
