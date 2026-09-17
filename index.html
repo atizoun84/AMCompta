@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AMCompta | Gestion Moderne</title>
+    <title>COMPTABILITÉ FAMILIALE AMOUSSOU | Gestion Moderne</title>
     
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#0b525b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1077/1077976.png">
@@ -14,25 +14,162 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            --glass-bg: rgba(255, 255, 255, 0.9);
+            --primary-gradient: linear-gradient(135deg, #0b525b 0%, #1b8a7a 100%);
+            --secondary-gradient: linear-gradient(135deg, #b8860b 0%, #e6b845 100%);
+            --glass-bg: rgba(255, 255, 255, 0.92);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #f4f7fe;
-            color: #2d3748;
+            background: #faf7f0;
+            color: #1f2937;
             min-height: 100vh;
         }
 
         .navbar {
             background: var(--primary-gradient) !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(11, 82, 91, 0.15);
+        }
+
+        /* --- Brand centré avec police spéciale --- */
+        .navbar-brand-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            line-height: 1.1;
+            pointer-events: auto;
+        }
+        .navbar-brand-center .brand-title {
+            font-family: 'Cinzel', 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.1rem;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            white-space: nowrap;
+        }
+        .navbar-brand-center .brand-title i {
+            font-size: 1.35rem;
+            color: #f5dc8a;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .navbar-brand-center .brand-subtitle {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.58rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 3px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 1199px) {
+            .navbar-brand-center .brand-title {
+                font-size: 1.84rem;
+                letter-spacing: 2px;
+            }
+            .navbar-brand-center .brand-title i {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .navbar > .container {
+                flex-direction: column;
+                align-items: stretch;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+            .navbar-brand-center {
+                position: static;
+                transform: none;
+                order: 1;
+                margin: 0 auto 10px auto;
+            }
+            .navbar-brand-center .brand-title {
+                font-size: 1.64rem;
+                letter-spacing: 1.5px;
+                justify-content: center;
+            }
+            .navbar-brand-center .brand-subtitle {
+                display: none;
+            }
+            .navbar > .container > .d-flex.ms-auto {
+                order: 2;
+                margin-left: 0 !important;
+                width: 100%;
+                justify-content: space-between;
+            }
+            .navbar-collapse {
+                order: 3;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar-brand-center .brand-title {
+                font-size: 1.36rem;
+                letter-spacing: 1px;
+                gap: 6px;
+                white-space: normal;
+                text-align: center;
+            }
+            .navbar-brand-center .brand-title i {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* --- ANIMATION FLUIDE DU MENU DE NAVIGATION --- */
+        .navbar-collapse {
+            transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.4s ease;
+        }
+        .navbar-collapse.collapsing {
+            transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.4s ease;
+            overflow: hidden;
+        }
+        /* Animation fluide d'apparition des liens du menu */
+        .navbar-collapse.show .nav-link,
+        .navbar-collapse.collapsing .nav-link {
+            animation: navLinkSlideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+        /* Délais en cascade pour un effet "stagger" élégant */
+        .navbar-collapse .nav-item:nth-child(1) .nav-link { animation-delay: 0.08s; }
+        .navbar-collapse .nav-item:nth-child(2) .nav-link { animation-delay: 0.16s; }
+        .navbar-collapse .nav-item:nth-child(3) .nav-link { animation-delay: 0.24s; }
+
+        @keyframes navLinkSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Rotation fluide de l'icône du toggler */
+        .navbar-toggler {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .navbar-toggler[aria-expanded="true"] {
+            transform: rotate(90deg);
         }
 
         .card-custom {
@@ -41,11 +178,12 @@
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
             transition: transform 0.3s ease;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 25px rgba(11, 82, 91, 0.06);
         }
 
         .card-custom:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(11, 82, 91, 0.12);
         }
 
         .stat-card {
@@ -70,8 +208,14 @@
             font-weight: 600;
         }
 
+        .btn-gradient:hover {
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(27, 138, 122, 0.35);
+        }
+
         .transaction-item {
-            border-bottom: 1px solid #edf2f7;
+            border-bottom: 1px solid #ece8e0;
             padding: 15px 0;
         }
 
@@ -82,8 +226,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f0f3ff;
-            color: #4c51bf;
+            background: #e6f2ef;
+            color: #0b525b;
         }
 
         #chart-container, #report-chart-container {
@@ -114,12 +258,12 @@
 
         .form-control:focus, .form-select:focus, .form-control, .form-select {
             font-weight: 700;
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.1);
+            border-color: #1b8a7a;
+            box-shadow: 0 0 0 0.25rem rgba(27, 138, 122, 0.12);
         }
 
         .input-revenu {
-            color: #00008B !important;
+            color: #0b525b !important;
             font-weight: 900 !important;
         }
         .input-depense {
@@ -147,7 +291,7 @@
             right: 25px;
             z-index: 1000;
             border-radius: 50px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 15px rgba(11, 82, 91, 0.25);
             animation: pulse-animation 2s infinite;
         }
 
@@ -245,6 +389,34 @@
         #calcDisplay {
             letter-spacing: 2px;
         }
+
+        /* Harmonisation des accents avec le thème */
+        .text-primary { color: #0b525b !important; }
+        .text-warning { color: #b8860b !important; }
+        .border-primary { border-color: #1b8a7a !important; }
+        .btn-outline-primary {
+            color: #0b525b;
+            border-color: #0b525b;
+        }
+        .btn-outline-primary:hover {
+            background-color: #0b525b;
+            border-color: #0b525b;
+            color: white;
+        }
+        .bg-success-subtle { background-color: #e6f2ef !important; }
+        .text-success { color: #1b8a7a !important; }
+        .form-check-input:checked {
+            background-color: #1b8a7a;
+            border-color: #1b8a7a;
+        }
+        .btn-success {
+            background-color: #1b8a7a;
+            border-color: #1b8a7a;
+        }
+        .btn-success:hover {
+            background-color: #0b525b;
+            border-color: #0b525b;
+        }
     </style>
 </head>
 <body>
@@ -252,7 +424,7 @@
     <div id="printArea">
         <div class="print-header d-flex justify-content-between align-items-center">
             <div>
-                <h3 class="fw-bold mb-0">AMCompta | Gestion Financière</h3>
+                <h3 class="fw-bold mb-0">COMPTABILITÉ FAMILIALE AMOUSSOU</h3>
                 <p class="mb-0">République du Bénin - Service Comptabilité Familiale</p>
                 <p class="fw-bold text-uppercase mt-1" id="print-family-name-header"></p>
             </div>
@@ -289,23 +461,27 @@
     </div>
 
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <div>
-                <a class="navbar-brand fw-bold fs-4 mb-0" href="#" onclick="showSection('dashboard')">
-                    <i class="bi bi-wallet2 me-2"></i>AMCompta
-                </a>
-                <div class="text-white-50 small" style="margin-top: -8px; font-size: 0.7rem;">Chef de famille : AMOUSSOU Atizoun Plateny</div>
-            </div>
-            <div class="d-flex align-items-center gap-2">
+        <div class="container position-relative py-2">
+            <!-- Brand centré avec police spéciale -->
+            <a class="navbar-brand-center" href="#" onclick="showSection('dashboard')">
+                <span class="brand-title">
+                    <i class="bi bi-wallet2"></i>
+                    <span>COMPTABILITÉ FAMILIALE AMOUSSOU</span>
+                </span>
+                <span class="brand-subtitle">Chef de famille : AMOUSSOU Atizoun Plateny</span>
+            </a>
+
+            <!-- Contrôles à droite -->
+            <div class="d-flex align-items-center gap-2 ms-auto">
                 <!-- Solde Actuel -->
                 <div id="header-balance" class="header-balance-box">
                     <small>Solde disponible</small>
                     <span id="header-balance-value">0 FCFA</span>
                 </div>
-                <!-- NOUVEAU: Solde Prévisionnel -->
-                <div id="header-forecast-balance" class="header-balance-box" style="border-color: rgba(255, 215, 0, 0.6); background: rgba(255, 215, 0, 0.15);">
-                    <small style="color: #ffe066;"><i class="bi bi-graph-up-arrow me-1"></i>Solde prévisionnel</small>
-                    <span id="header-forecast-value" style="color: #ffe066;">0 FCFA</span>
+                <!-- Solde Prévisionnel -->
+                <div id="header-forecast-balance" class="header-balance-box" style="border-color: rgba(230, 184, 69, 0.6); background: rgba(230, 184, 69, 0.15);">
+                    <small style="color: #f5dc8a;"><i class="bi bi-graph-up-arrow me-1"></i>Solde prévisionnel</small>
+                    <span id="header-forecast-value" style="color: #f5dc8a;">0 FCFA</span>
                 </div>
                 <div id="syncStatus" class="sync-badge badge rounded-pill bg-success shadow-sm">
                     <i class="bi bi-cloud-check me-1"></i> Synchronisé
@@ -349,10 +525,10 @@
                         <div class="mt-2">
                             <span id="balance-badge" class="badge rounded-pill px-3 py-2">---</span>
                         </div>
-                        <!-- NOUVEAU: Affichage du solde prévisionnel sur le dashboard -->
+                        <!-- Affichage du solde prévisionnel sur le dashboard -->
                         <div class="mt-3 pt-3 border-top">
                             <small class="text-uppercase text-muted fw-bold letter-spacing-1"><i class="bi bi-graph-up-arrow me-1"></i>Solde Prévisionnel</small>
-                            <h4 class="fw-bold mt-1 mb-0" id="dash-forecast" style="color: #d4a017;">0 FCFA</h4>
+                            <h4 class="fw-bold mt-1 mb-0" id="dash-forecast" style="color: #b8860b;">0 FCFA</h4>
                             <small class="text-muted fst-italic">Inclut les transactions programmées</small>
                         </div>
                     </div>
@@ -377,7 +553,7 @@
                 <div class="col-md-6">
                     <div class="card card-custom stat-card p-4">
                         <small class="text-uppercase text-muted fw-bold">Cumul Revenus</small>
-                        <h3 class="fw-bold mt-2 text-primary" id="dash-revenu">0 FCFA</h3>
+                        <h3 class="fw-bold mt-2" style="color: #0b525b;" id="dash-revenu">0 FCFA</h3>
                         <span class="text-muted small">Période en cours</span>
                     </div>
                 </div>
@@ -418,33 +594,45 @@
 
         <div id="section-transactions" class="page-section">
             <div class="d-flex flex-column mb-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <!-- Ligne 1 : Titre + Bouton Nouvelle Saisie -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                     <div>
                         <h2 class="fw-700 mb-0">Historique</h2>
                         <p class="text-muted mb-0">Suivi détaillé</p>
                     </div>
-                    <div class="d-flex gap-2 align-items-center">
-                        <button class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="toggleSortOrder()" id="btnSort">
-                            <i class="bi bi-sort-down"></i> <span id="sortText">Récent</span>
-                        </button>
-                        <select class="form-select form-select-sm rounded-pill fw-bold" id="filterPeriod" onchange="filterData()" style="width: auto;">
-                            <option value="all">Tout</option>
-                            <option value="day">Aujourd'hui</option>
-                            <option value="week">Cette Semaine</option>
-                            <option value="month">Ce Mois</option>
-                            <option value="year">Cette Année</option>
-                        </select>
-                        <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="toggleTable()">
-                            <i class="bi bi-eye me-1"></i> <span id="btnTableText">Afficher</span>
-                        </button>
-                        <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addModal" onclick="prepareAddModal()"><i class="bi bi-plus"></i></button>
-                    </div>
+                    <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addModal" onclick="prepareAddModal()">
+                        <i class="bi bi-plus-lg me-1"></i>Nouvelle Saisie
+                    </button>
                 </div>
-                <div class="search-container-full">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 rounded-start-pill shadow-sm"><i class="bi bi-search text-primary"></i></span>
-                        <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill fw-bold shadow-sm" placeholder="Rechercher une transaction ou un bénéficiaire..." onkeyup="filterData()">
+                <!-- Ligne 2 : Filtres (Tri, Période, Statut) -->
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="toggleSortOrder()" id="btnSort">
+                        <i class="bi bi-sort-down"></i> <span id="sortText">Récent</span>
+                    </button>
+                    <select class="form-select form-select-sm rounded-pill fw-bold" id="filterPeriod" onchange="filterData()" style="width: auto;">
+                        <option value="all">Tout</option>
+                        <option value="day">Aujourd'hui</option>
+                        <option value="week">Cette Semaine</option>
+                        <option value="month">Ce Mois</option>
+                        <option value="year">Cette Année</option>
+                    </select>
+                    <select class="form-select form-select-sm rounded-pill fw-bold" id="filterStatus" onchange="filterData()" style="width: auto;">
+                        <option value="all">Tous les statuts</option>
+                        <option value="executed">✅ Exécuté</option>
+                        <option value="programmed">⏳ Programmée</option>
+                    </select>
+                </div>
+                <!-- Ligne 3 : Recherche + Bouton Afficher/Masquer -->
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <div class="flex-grow-1" style="min-width: 220px;">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 rounded-start-pill shadow-sm"><i class="bi bi-search text-primary"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill fw-bold shadow-sm" placeholder="Rechercher une transaction ou un bénéficiaire..." onkeyup="filterData()">
+                        </div>
                     </div>
+                    <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="toggleTable()">
+                        <i class="bi bi-eye me-1"></i> <span id="btnTableText">Afficher</span>
+                    </button>
                 </div>
             </div>
             
@@ -496,10 +684,9 @@
                                 <span>Marge Nette</span>
                                 <span class="fw-bold text-primary" id="report-marge">0 FCFA</span>
                             </li>
-                            <!-- NOUVEAU: Ligne Solde Prévisionnel dans le résumé -->
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-top">
                                 <span><i class="bi bi-graph-up-arrow me-1 text-warning"></i>Solde Prévisionnel</span>
-                                <span class="fw-bold" id="report-forecast" style="color: #d4a017;">0 FCFA</span>
+                                <span class="fw-bold" id="report-forecast" style="color: #b8860b;">0 FCFA</span>
                             </li>
                         </ul>
                         <div class="d-flex flex-column gap-2 mt-4">
@@ -756,6 +943,16 @@
         let myChart, myPie;
         let deferredPrompt;
 
+        // --- Fonction de formatage des montants ---
+        // Sépare les milliers par un espace : 1000 -> "1 000", 1000000 -> "1 000 000"
+        function formatAmount(num) {
+            if (num === null || num === undefined || isNaN(num)) return '0';
+            const str = String(num);
+            const parts = str.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            return parts.join(',');
+        }
+
         // Synchronisation Firebase
         const connectedRef = ref(db, ".info/connected");
         onValue(connectedRef, (/** @type {any} */ snap) => {
@@ -829,7 +1026,7 @@
             document.getElementById('detail-desc').innerText = t.desc;
             document.getElementById('detail-benef').innerText = t.benef || '-';
             document.getElementById('detail-type').innerHTML = `<span class="badge ${t.type==='Revenu'?'bg-success-subtle text-success':'bg-danger-subtle text-danger'}">${t.type}</span>`;
-            document.getElementById('detail-amount').innerHTML = `<span class="${t.type==='Revenu'?'text-success':'text-danger'} fs-5">${t.type==='Revenu'?'+':'-'} ${t.amount.toLocaleString()} FCFA</span>`;
+            document.getElementById('detail-amount').innerHTML = `<span class="${t.type==='Revenu'?'text-success':'text-danger'} fs-5">${t.type==='Revenu'?'+':'-'} ${formatAmount(t.amount)} FCFA</span>`;
             
             const statusEl = document.getElementById('detail-status');
             if (t.programmed) {
@@ -901,12 +1098,12 @@
                     <tr>
                         <td>${new Date(t.date).toLocaleDateString()} à ${t.created_at.split(' à ')[1] || '---'}</td>
                         <td>${t.benef || '-'}</td>
-                        <td class="text-end fw-bold">${t.amount.toLocaleString()}</td>
+                        <td class="text-end fw-bold">${formatAmount(t.amount)}</td>
                     </tr>
                 `;
             });
 
-            totalEl.innerText = total.toLocaleString() + ' FCFA';
+            totalEl.innerText = formatAmount(total) + ' FCFA';
         };
 
         window.copyAnalysisToWhatsApp = function() {
@@ -943,16 +1140,15 @@
                         <td>${t.desc}</td>
                         <td>${t.benef || '-'}</td>
                         <td style="color: ${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
-                        <td>${t.type === 'Revenu' ? 'green' : 'red'}">${t.type}</td>
                         <td style="color: green;">Exécuté</td>
-                        <td>${t.amount.toLocaleString()}</td>
+                        <td>${formatAmount(t.amount)}</td>
                     </tr>
                 `;
             });
 
             document.getElementById('print-family-name-header').innerText = familyName;
             document.getElementById('print-period-info').innerText = `Analyse : ${desc}`;
-            document.getElementById('print-stats').innerHTML = `<div style="text-align:center; background:#eee; padding:10px;">Total pour ${desc}: <b>${total.toLocaleString()} FCFA</b></div>`;
+            document.getElementById('print-stats').innerHTML = `<div style="text-align:center; background:#eee; padding:10px;">Total pour ${desc}: <b>${formatAmount(total)} FCFA</b></div>`;
             
             bootstrap.Modal.getInstance(document.getElementById('analysisModal')).hide();
             setTimeout(() => window.print(), 500);
@@ -1033,7 +1229,7 @@
                             ${isProgrammed ? '<span class="badge bg-warning text-dark ms-1"><i class="bi bi-clock-history me-1"></i>Programmé</span>' : ''}
                         </td>
                         <td class="text-end fw-bold amount-cell ${t.type==='Revenu'?'text-success':'text-danger'}">
-                            ${t.type==='Revenu'?'+':'-'} ${t.amount.toLocaleString()}
+                            ${t.type==='Revenu'?'+':'-'} ${formatAmount(t.amount)}
                         </td>
                         <td class="text-center pe-4">
                             <div class="d-flex justify-content-center gap-2">
@@ -1048,43 +1244,43 @@
             });
 
             // UI Updates
-            document.getElementById('dash-total').innerText = currentBalance.toLocaleString() + ' FCFA';
-            document.getElementById('dash-total').style.color = currentBalance >= 0 ? '#2dce89' : '#f5365c';
-            document.getElementById('dash-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
-            document.getElementById('dash-depense').innerText = totalDep.toLocaleString() + ' FCFA';
-            document.getElementById('report-revenu').innerText = totalRev.toLocaleString() + ' FCFA';
-            document.getElementById('report-depense').innerText = totalDep.toLocaleString() + ' FCFA';
-            document.getElementById('report-marge').innerText = (totalRev - totalDep).toLocaleString() + ' FCFA';
+            document.getElementById('dash-total').innerText = formatAmount(currentBalance) + ' FCFA';
+            document.getElementById('dash-total').style.color = currentBalance >= 0 ? '#1b8a7a' : '#f5365c';
+            document.getElementById('dash-revenu').innerText = formatAmount(totalRev) + ' FCFA';
+            document.getElementById('dash-depense').innerText = formatAmount(totalDep) + ' FCFA';
+            document.getElementById('report-revenu').innerText = formatAmount(totalRev) + ' FCFA';
+            document.getElementById('report-depense').innerText = formatAmount(totalDep) + ' FCFA';
+            document.getElementById('report-marge').innerText = formatAmount(totalRev - totalDep) + ' FCFA';
 
-            // NOUVEAU: Mise à jour du Solde Prévisionnel sur le Dashboard
+            // Mise à jour du Solde Prévisionnel sur le Dashboard
             const dashForecast = document.getElementById('dash-forecast');
             if (dashForecast) {
-                dashForecast.innerText = forecastBalance.toLocaleString() + ' FCFA';
-                dashForecast.style.color = forecastBalance >= 0 ? '#d4a017' : '#f5365c';
+                dashForecast.innerText = formatAmount(forecastBalance) + ' FCFA';
+                dashForecast.style.color = forecastBalance >= 0 ? '#b8860b' : '#f5365c';
             }
 
-            // NOUVEAU: Mise à jour du Solde Prévisionnel dans le résumé des rapports
+            // Mise à jour du Solde Prévisionnel dans le résumé des rapports
             const reportForecast = document.getElementById('report-forecast');
             if (reportForecast) {
-                reportForecast.innerText = forecastBalance.toLocaleString() + ' FCFA';
+                reportForecast.innerText = formatAmount(forecastBalance) + ' FCFA';
             }
 
             // Mise à jour du Solde disponible dans le header (permanent)
             const headerBalance = document.getElementById('header-balance-value');
             if (headerBalance) {
-                headerBalance.innerText = currentBalance.toLocaleString() + ' FCFA';
+                headerBalance.innerText = formatAmount(currentBalance) + ' FCFA';
             }
 
             // Mise à jour du Solde prévisionnel dans le header
             const headerForecast = document.getElementById('header-forecast-value');
             if (headerForecast) {
-                headerForecast.innerText = forecastBalance.toLocaleString() + ' FCFA';
+                headerForecast.innerText = formatAmount(forecastBalance) + ' FCFA';
             }
 
             // Mise à jour des Phares
-            document.getElementById('dash-phare-revenu').innerText = maxRevObj.amount > 0 ? maxRevObj.amount.toLocaleString() + ' FCFA' : '---';
+            document.getElementById('dash-phare-revenu').innerText = maxRevObj.amount > 0 ? formatAmount(maxRevObj.amount) + ' FCFA' : '---';
             document.getElementById('dash-phare-revenu-desc').innerText = maxRevObj.amount > 0 ? `${maxRevObj.desc} (${maxRevObj.benef || 'N/A'})` : 'Aucune donnée';
-            document.getElementById('dash-phare-depense').innerText = maxDepObj.amount > 0 ? maxDepObj.amount.toLocaleString() + ' FCFA' : '---';
+            document.getElementById('dash-phare-depense').innerText = maxDepObj.amount > 0 ? formatAmount(maxDepObj.amount) + ' FCFA' : '---';
             document.getElementById('dash-phare-depense-desc').innerText = maxDepObj.amount > 0 ? `${maxDepObj.desc} (${maxDepObj.benef || 'N/A'})` : 'Aucune donnée';
 
             if(myChart) {
@@ -1112,7 +1308,7 @@
                                 <div class="text-muted fw-normal" style="font-size: 0.65rem;">${new Date(t.date).toLocaleDateString()} ${t.created_at.split(' à ')[1] || ''}${isProgrammed ? ' • <span class="text-warning fw-bold">Programmé</span>' : ''}</div>
                             </div>
                             <div class="fw-bold small ${t.type==='Revenu'?'text-success':'text-danger'}">
-                                ${t.type==='Revenu'?'+':'-'}${t.amount.toLocaleString()}
+                                ${t.type==='Revenu'?'+':'-'}${formatAmount(t.amount)}
                             </div>
                         </div>
                     </div>
@@ -1133,14 +1329,14 @@
             const ctx = document.getElementById('myChart').getContext('2d');
             myChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: [], datasets: [{ label: 'Variation Solde', data: [], borderColor: '#764ba2', tension: 0.4, fill: true, backgroundColor: 'rgba(118, 75, 162, 0.1)' }] },
+                data: { labels: [], datasets: [{ label: 'Variation Solde', data: [], borderColor: '#1b8a7a', tension: 0.4, fill: true, backgroundColor: 'rgba(27, 138, 122, 0.1)' }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
             const ctxPie = document.getElementById('pieChart').getContext('2d');
             myPie = new Chart(ctxPie, {
                 type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'] }] },
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#0b525b', '#1b8a7a', '#b8860b', '#e6b845', '#e74a3b', '#858796', '#5a5c69'] }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
@@ -1364,8 +1560,10 @@
 
         window.filterData = function() { renderAll(); };
 
+        // Fonction de filtrage prenant en compte le filtre de statut
         window.getFilteredTransactions = function() {
             const period = document.getElementById('filterPeriod').value;
+            const status = document.getElementById('filterStatus').value;
             const search = document.getElementById('searchInput').value.toLowerCase();
             const now = new Date();
             return window.transactions.filter(/** @param {any} t */ t => {
@@ -1375,7 +1573,13 @@
                 else if(period === 'week') matchP = (now.getTime() - tDate.getTime()) <= 7 * 24 * 60 * 60 * 1000;
                 else if(period === 'month') matchP = tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
                 else if(period === 'year') matchP = tDate.getFullYear() === now.getFullYear();
-                return matchP && (t.desc.toLowerCase().includes(search) || (t.benef && t.benef.toLowerCase().includes(search)));
+                
+                // Filtre par statut (exécuté / programmé)
+                let matchS = true;
+                if(status === 'executed') matchS = t.programmed !== true;
+                else if(status === 'programmed') matchS = t.programmed === true;
+                
+                return matchP && matchS && (t.desc.toLowerCase().includes(search) || (t.benef && t.benef.toLowerCase().includes(search)));
             });
         };
 
@@ -1390,8 +1594,7 @@
         };
 
         window.generateProfessionalPrint = function(/** @type {string} */ familyName) {
-            // MODIFIÉ: On inclut désormais TOUTES les transactions (exécutées ET programmées)
-            // On garde le tri par date (plus récentes en premier)
+            // On inclut TOUTES les transactions (exécutées ET programmées)
             const filtered = getFilteredTransactions().sort((/** @type {any} */ a, /** @type {any} */ b) => new Date(b.date) - new Date(a.date));
             const tbody = document.getElementById('print-tbody');
             const stats = document.getElementById('print-stats');
@@ -1406,7 +1609,7 @@
             
             filtered.forEach(/** @param {any} t */ t => {
                 const isProgrammed = t.programmed === true;
-                // MODIFIÉ: On ajoute la colonne Statut et on distingue les totaux exécutés des programmés
+                // On distingue les totaux exécutés des programmés
                 if(isProgrammed) {
                     if(t.type === 'Revenu') progRev += t.amount;
                     else progDep += t.amount;
@@ -1416,7 +1619,7 @@
                 }
                 
                 const statusText = isProgrammed ? 'Programmé' : 'Exécuté';
-                const statusColor = isProgrammed ? '#d4a017' : 'green';
+                const statusColor = isProgrammed ? '#b8860b' : 'green';
                 const statusBadge = isProgrammed ? '⏳' : '✅';
                 
                 tbody.innerHTML += `<tr>
@@ -1425,7 +1628,7 @@
                     <td>${t.benef || '-'}</td>
                     <td style="color:${t.type==='Revenu'?'green':'red'}">${t.type}</td>
                     <td style="color:${statusColor}; font-weight: bold;">${statusBadge} ${statusText}</td>
-                    <td>${t.amount.toLocaleString()}</td>
+                    <td>${formatAmount(t.amount)}</td>
                 </tr>`;
             });
 
@@ -1433,15 +1636,14 @@
             const forecastBalance = (rev - dep) + progRev - progDep;
 
             document.getElementById('print-period-info').innerText = `Période : ${period}`;
-            // MODIFIÉ: Affichage détaillé avec totaux exécutés, programmés et prévisionnel
             stats.innerHTML = `<div style="display:flex; justify-content: space-around; background: #eee; padding: 10px;">
-                <span>Total Revenus exécutés: <b>${rev.toLocaleString()}</b></span>
-                <span>Total Dépenses exécutées: <b>${dep.toLocaleString()}</b></span>
-                <span>Solde Net: <b>${(rev-dep).toLocaleString()}</b></span></div>
-                <div style="display:flex; justify-content: space-around; background: #fff8dc; padding: 8px; margin-top: 5px; border: 1px solid #d4a017;">
-                    <span>Revenus programmés: <b>${progRev.toLocaleString()}</b></span>
-                    <span>Dépenses programmées: <b>${progDep.toLocaleString()}</b></span>
-                    <span>Solde Prévisionnel: <b>${forecastBalance.toLocaleString()} FCFA</b></span>
+                <span>Total Revenus exécutés: <b>${formatAmount(rev)}</b></span>
+                <span>Total Dépenses exécutées: <b>${formatAmount(dep)}</b></span>
+                <span>Solde Net: <b>${formatAmount(rev-dep)}</b></span></div>
+                <div style="display:flex; justify-content: space-around; background: #fff8dc; padding: 8px; margin-top: 5px; border: 1px solid #b8860b;">
+                    <span>Revenus programmés: <b>${formatAmount(progRev)}</b></span>
+                    <span>Dépenses programmées: <b>${formatAmount(progDep)}</b></span>
+                    <span>Solde Prévisionnel: <b>${formatAmount(forecastBalance)} FCFA</b></span>
                 </div>`;
             setTimeout(() => window.print(), 500);
         };
